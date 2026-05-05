@@ -1,0 +1,6 @@
+@HandyLink.WebApi_HostAddress = http://localhost:5058
+
+GET {{HandyLink.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
