@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class HandymanApplicationReferenceConfiguration : IEntityTypeConfiguration<HandymanApplicationReference>
+    public class HandymanApplicationReferenceConfiguration : BaseEntityConfiguration<HandymanApplicationReference>
     {
-        public void Configure(EntityTypeBuilder<HandymanApplicationReference> builder)
+        public override void Configure(EntityTypeBuilder<HandymanApplicationReference> builder)
         {
+            base.Configure(builder);
             builder.ToTable("HandymanApplicationReferences");
-            builder.HasKey(x => x.Id);
             builder.Property(x => x.FirstName).IsRequired().HasMaxLength(50);
             builder.Property(x => x.LastName).IsRequired().HasMaxLength(50);
             builder.Property(x => x.PhoneNumber).HasMaxLength(20);

@@ -1,4 +1,7 @@
 
+using HandyLink.Services.Database;
+using Microsoft.EntityFrameworkCore;
+
 namespace HandyLink.WebApi
 {
     public class Program
@@ -10,7 +13,12 @@ namespace HandyLink.WebApi
             // Add services to the container.
 
             builder.Services.AddControllers();
-            
+
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<HandyLinkDbContext>(options =>
+                options.UseSqlServer(connectionString));
+
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 

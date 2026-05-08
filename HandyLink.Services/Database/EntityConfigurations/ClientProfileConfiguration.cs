@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class ClientProfileConfiguration : IEntityTypeConfiguration<ClientProfile>
+    public class ClientProfileConfiguration : BaseEntityConfiguration<ClientProfile>
     {
-        public void Configure(EntityTypeBuilder<ClientProfile> builder)
+        public override void Configure(EntityTypeBuilder<ClientProfile> builder)
         {
+            base.Configure(builder);
             builder.ToTable("ClientProfiles");
-            builder.HasKey(x => x.Id);
 
             builder.HasOne(x => x.User)
             .WithOne(x => x.ClientProfile)

@@ -6,12 +6,12 @@ using System.Xml.Schema;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class CityConfiguration : IEntityTypeConfiguration<City>
+    public class CityConfiguration : BaseEntityConfiguration<City>
     {
-        public void Configure(EntityTypeBuilder<City> builder)
+        public override void Configure(EntityTypeBuilder<City> builder)
         {
+            base.Configure(builder);
             builder.ToTable("Cities");
-            builder.HasKey(x => x.Id);
             builder.Property(x => x.Name).IsRequired().HasMaxLength(50);
             builder.Property(x => x.CountryId).IsRequired();
 

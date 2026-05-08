@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class HandymanApplicationDocumentConfiguration : IEntityTypeConfiguration<HandymanApplicationDocument>
+    public class HandymanApplicationDocumentConfiguration : BaseEntityConfiguration<HandymanApplicationDocument>
     {
-        public void Configure(EntityTypeBuilder<HandymanApplicationDocument> builder)
+        public override void Configure(EntityTypeBuilder<HandymanApplicationDocument> builder)
         {
+            base.Configure(builder);
             builder.ToTable("HandymanApplicationDocuments");
-            builder.HasKey(x => x.Id);
             builder.Property(x => x.FileUrl).IsRequired();
             builder.Property(x => x.FileName).IsRequired();
             builder.Property(x => x.ContentType).IsRequired();

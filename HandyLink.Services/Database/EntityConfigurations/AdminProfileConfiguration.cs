@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class AdminProfileConfiguration : IEntityTypeConfiguration<AdminProfile>
+    public class AdminProfileConfiguration : BaseEntityConfiguration<AdminProfile>
     {
-        public void Configure(EntityTypeBuilder<AdminProfile> builder)
+        public override void Configure(EntityTypeBuilder<AdminProfile> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("AdminProfiles");
-            builder.HasKey(x => x.Id);
 
             builder.HasOne(x => x.User)
             .WithOne(x => x.AdminProfile)

@@ -12,6 +12,5 @@ namespace HandyLink.Services.Database.Entities
         public Job Job { get; set; } = null!;
         public int MarkedByUserId { get; set; }
         public User MarkedByUser { get; set; } = null!;
-        public DateTime MarkedAtUtc { get; set; }
     }
 }

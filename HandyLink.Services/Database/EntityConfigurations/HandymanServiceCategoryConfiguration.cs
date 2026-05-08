@@ -10,12 +10,13 @@ using System.Threading.Tasks;
 namespace HandyLink.Services.Database.EntityConfigurations
 {
     
-    public class HandymanServiceCategoryConfiguration : IEntityTypeConfiguration<HandymanServiceCategory>
+    public class HandymanServiceCategoryConfiguration : BaseEntityConfiguration<HandymanServiceCategory>
     {
-        public void Configure(EntityTypeBuilder<HandymanServiceCategory> builder)
+        public override void Configure(EntityTypeBuilder<HandymanServiceCategory> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("HandymanServiceCategories");
-            builder.HasKey(x => x.Id);
 
 
             builder.HasOne(x => x.HandymanProfile)

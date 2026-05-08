@@ -9,14 +9,18 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class CountryConfiguration : BaseEntityConfiguration<Country>
+    public class ChatConfiguration : BaseEntityConfiguration<Chat>
     {
-        public override void Configure(EntityTypeBuilder<Country> builder)
+        public override void Configure(EntityTypeBuilder<Chat> builder)
         {
             base.Configure(builder);
-            builder.ToTable("Countries");
-            builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
-            
+
+            builder.ToTable("Chats");
+
+            builder.HasOne(x => x.Job)
+                .WithOne(x => x.Chat)
+                .HasForeignKey<Chat>(x => x.JobId);
+
         }
     }
 }

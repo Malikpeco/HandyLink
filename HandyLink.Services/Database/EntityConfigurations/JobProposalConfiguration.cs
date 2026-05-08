@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class JobProposalConfiguration : IEntityTypeConfiguration<JobProposal>
+    public class JobProposalConfiguration : BaseEntityConfiguration<JobProposal>
     {
-        public void Configure(EntityTypeBuilder<JobProposal> builder)
+        public override void Configure(EntityTypeBuilder<JobProposal> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("JobProposals");
-            builder.HasKey(x => x.Id);
             builder.Property(x => x.ProposedPrice).HasPrecision(18, 2);
             builder.Property(x => x.ProposedPriceOnArrangement).IsRequired();
             builder.Property(x => x.ProposedScheduledAtUtc).IsRequired();

@@ -9,12 +9,14 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class JobConfiguration : IEntityTypeConfiguration<Job>
+    public class JobConfiguration : BaseEntityConfiguration<Job>
     {
-        public void Configure(EntityTypeBuilder<Job> builder)
+        public override void Configure(EntityTypeBuilder<Job> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("Jobs");
-            builder.HasKey(x => x.Id);
+            
             builder.Property(x => x.Title).IsRequired().HasMaxLength(150);
             builder.Property(x => x.Description).IsRequired().HasMaxLength(2000);
             builder.Property(x => x.Address).HasMaxLength(200);
@@ -27,26 +29,36 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.Property(x => x.CurrentScheduledAtUtc).IsRequired();
             builder.Property(x => x.InitialTimeFlexible).IsRequired();
             builder.Property(x => x.CurrentTimeFlexible).IsRequired();
-            
-            builder.HasOne(x=>x.ClientProfile)
-                .WithMany(x=>x.Jobs)
-                .HasForeignKey(x=>x.ClientProfileId);
+
+            builder.HasOne(x => x.ClientProfile)
+                .WithMany(x => x.Jobs)
+                .HasForeignKey(x => x.ClientProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
             
             builder.HasOne(x=>x.HandymanProfile)
                 .WithMany(x=>x.Jobs)
-                .HasForeignKey(x=>x.HandymanProfileId);
+                .HasForeignKey(x=>x.HandymanProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.HasOne(x=>x.ServiceCategory)
                 .WithMany(x=>x.Jobs)
-                .HasForeignKey(x=>x.ServiceCategoryId);
+                .HasForeignKey(x=>x.ServiceCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
 
             builder.HasOne(x=>x.City)
                 .WithMany(x=>x.Jobs)
-                .HasForeignKey(x=>x.CityId);
+                .HasForeignKey(x=>x.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.HasOne(x=>x.JobStatus)
                 .WithMany(x=>x.Jobs)
-                .HasForeignKey(x=>x.JobStatusId);
+                .HasForeignKey(x=>x.JobStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
 
 

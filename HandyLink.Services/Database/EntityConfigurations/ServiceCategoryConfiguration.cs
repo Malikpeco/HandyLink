@@ -9,14 +9,17 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class ServiceCategoryConfiguration : IEntityTypeConfiguration<ServiceCategory>
+    public class ServiceCategoryConfiguration : BaseEntityConfiguration<ServiceCategory>
     {
-        public void Configure(EntityTypeBuilder<ServiceCategory> builder)
+        public override void Configure(EntityTypeBuilder<ServiceCategory> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("ServiceCategories");
-            builder.HasKey(x => x.Id);
+            
             builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
             builder.Property(x => x.Description).HasMaxLength(100);
+            builder.Property(x=>x.IsActive).HasDefaultValue(true);
 
             
 

@@ -21,7 +21,12 @@ namespace HandyLink.Services.Database.Entities
         public ClientProfile? ClientProfile { get; set; }
         public AdminProfile? AdminProfile { get; set; }
         public ICollection<JobProposal> JobProposals { get; set; } = new List<JobProposal>();
+        public ICollection<JobCompletionMark> JobCompletionMarks { get; set; } = new List<JobCompletionMark>();
+        public ICollection<JobCancellationMark> JobCancellationMarks { get; set; } = new List<JobCancellationMark>();
+        public ICollection<Message> Messages { get; set; } = new List<Message>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         
+
 
     }
 }

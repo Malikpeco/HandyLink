@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class UserConfiguration : IEntityTypeConfiguration<User>
+    public class UserConfiguration : BaseEntityConfiguration<User>
     {
-        public void Configure(EntityTypeBuilder<User> builder)
+        public override void Configure(EntityTypeBuilder<User> builder)
         {
+            base.Configure(builder);
+
             builder.ToTable("Users");
-            builder.HasKey(x => x.Id);
             builder.Property(x => x.FirstName).IsRequired().HasMaxLength(50);
             builder.Property(x => x.LastName).IsRequired().HasMaxLength(50);
             builder.Property(x => x.Email).IsRequired().HasMaxLength(200);
@@ -25,11 +26,15 @@ namespace HandyLink.Services.Database.EntityConfigurations
             
             builder.HasOne(x => x.City)
                 .WithMany(x => x.Users)
-                .HasForeignKey(x => x.CityId);
+                .HasForeignKey(x => x.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.HasOne(x => x.UserStatus)
                 .WithMany(x => x.Users)
-                .HasForeignKey(x => x.UserStatusId);
+                .HasForeignKey(x => x.UserStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
         }
     }

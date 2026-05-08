@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Database.EntityConfigurations
 {
-    public class HandymanWorkPhotoConfiguration : IEntityTypeConfiguration<HandymanWorkPhoto>
+    public class HandymanWorkPhotoConfiguration : BaseEntityConfiguration<HandymanWorkPhoto>
     {
-        public void Configure(EntityTypeBuilder<HandymanWorkPhoto> builder)
+        public override void Configure(EntityTypeBuilder<HandymanWorkPhoto> builder)
         {
+            base.Configure(builder);
             builder.ToTable("HandymanWorkPhotos");
-            builder.HasKey(x => x.Id);
+
             builder.Property(x => x.ImageBase64).IsRequired();
 
             builder.HasOne(x => x.HandymanProfile)

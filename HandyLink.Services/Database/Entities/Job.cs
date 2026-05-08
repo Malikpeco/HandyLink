@@ -35,6 +35,12 @@ namespace HandyLink.Services.Database.Entities
         public DateTime? CancelledAtUtc { get; set; } 
         public DateTime? CompletedAtUtc { get; set; }
         public ICollection<JobProposal> JobProposals { get; set; } = new List<JobProposal>();
+        public ICollection<JobCompletionMark> JobCompletionMarks { get; set; } = new List<JobCompletionMark>();
+        public ICollection<JobCancellationMark> JobCancellationMarks { get; set; } = new List<JobCancellationMark>();
+        public Review? Review { get; set; }
+        public Chat? Chat { get; set; }
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
 
     }
 }
