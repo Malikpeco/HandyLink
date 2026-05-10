@@ -1,5 +1,6 @@
 
 using HandyLink.Services.Database;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace HandyLink.WebApi
@@ -17,6 +18,8 @@ namespace HandyLink.WebApi
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<HandyLinkDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            builder.Services.AddMapster();
 
 
             builder.Services.AddEndpointsApiExplorer();

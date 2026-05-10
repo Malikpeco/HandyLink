@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Model.Responses
 {
-    internal class PageResult
+    public class PageResult<T>
     {
+        public List<T> Items { get; set; } = new List<T>();
+        public int? TotalCount { get; set; }
     }
 }
