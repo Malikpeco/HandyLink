@@ -2,6 +2,8 @@
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Interfaces;
+using System.Linq.Dynamic.Core;
+
 using MapsterMapper;
 using System;
 using System.Collections.Generic;
@@ -41,6 +43,10 @@ namespace HandyLink.Services
                 if (searchObject.IncludeTotalCount)
                 {
                     totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
                 }
                 query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
                 query = query.Take(searchObject.PageSize);
