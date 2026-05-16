@@ -31,9 +31,12 @@ namespace HandyLink.WebApi
             builder.Services.AddMapster();
 
             builder.Services.AddScoped<ICountryService, CountryService>();
+            builder.Services.AddScoped<ICityService, CityService>();
 
             builder.Services.AddScoped<IValidator<CountryInsertRequest>, CountryInsertValidator>();
             builder.Services.AddScoped<IValidator<CountryUpdateRequest>, CountryUpdateValidator>();
+            builder.Services.AddScoped<IValidator<CityInsertRequest>, CityInsertValidator>();
+            builder.Services.AddScoped<IValidator<CityUpdateRequest>, CityUpdateValidator>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
