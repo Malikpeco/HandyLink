@@ -32,15 +32,8 @@ namespace HandyLink.WebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<TResponse>> GetById(int id)
         {
-            try
-            {
                 var result = await _service.GetByIdAsync(id);
                 return Ok(result);
-            }
-            catch(KeyNotFoundException)
-            {
-                return NotFound();
-            }
         }
 
 

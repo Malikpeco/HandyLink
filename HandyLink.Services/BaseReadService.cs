@@ -1,6 +1,7 @@
 ﻿using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
+using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using System.Linq.Dynamic.Core;
 
@@ -68,7 +69,7 @@ namespace HandyLink.Services
 
             if(entity == null)
             {
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
+                throw new HandyLinkNotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
             }
 
             return await Task.FromResult(_mapper.Map<TResponse>(entity));

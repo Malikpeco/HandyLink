@@ -3,6 +3,7 @@ using FluentValidation.Results;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using MapsterMapper;
+using HandyLink.Services.Exceptions;
 
 
 namespace HandyLink.Services
@@ -27,8 +28,7 @@ namespace HandyLink.Services
             var validationResult = await _insertValidator.ValidateAsync(request);
             if(validationResult.IsValid == false)
             {
-                var errors = validationResult.Errors.Select(e => _mapper.Map<ValidationFailure>(e));
-                throw new ValidationException(errors);
+                throw new HandyLinkValidationException(validationResult.Errors);
             }
 
             var entity = MapInsertRequestToEntity(request);
@@ -45,13 +45,12 @@ namespace HandyLink.Services
             var validationResult = await _updateValidator.ValidateAsync(request);
             if(validationResult.IsValid == false)
             {
-                var errors = validationResult.Errors.Select(e => _mapper.Map<ValidationFailure>(e));
-                throw new ValidationException(errors);
+                throw new HandyLinkValidationException(validationResult.Errors);
             }
 
             var entity = _dbContext.Set<TEntity>().Find(id);
             if (entity == null)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} with id {id} not found");
+                throw new HandyLinkNotFoundException($"{typeof(TEntity).Name} with id {id} not found");
 
             MapUpdateRequestToEntity(request, entity);
 
@@ -65,8 +64,8 @@ namespace HandyLink.Services
         {
             var entity = _dbContext.Set<TEntity>().Find(id);
 
-            if(entity == null)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
+            if (entity == null)
+                throw new HandyLinkNotFoundException($"{typeof(TEntity).Name} with id {id} not found.");
 
             _dbContext.Set<TEntity>().Remove(entity);
             await _dbContext.SaveChangesAsync();
@@ -75,7 +74,7 @@ namespace HandyLink.Services
 
         protected virtual TEntity MapInsertRequestToEntity(TInsertRequest request)
         {
-            var entity = _mapper.Map<TEntity>(request ?? throw new ArgumentNullException(nameof(request)));
+            var entity = _mapper.Map<TEntity>(request ?? throw new HandyLinkValidationException("Insert request is null."));
             return entity;
         }
 
