@@ -10,7 +10,7 @@ namespace HandyLink.Services
 {
     public abstract class BaseCRUDService<TEntity, TResponse, TSearchObject, TInsertRequest, TUpdateRequest>
         :BaseReadService<TEntity, TResponse, TSearchObject>
-        where TEntity : class
+        where TEntity : BaseEntity
         where TSearchObject : BaseSearchObject
     {
         protected readonly IValidator<TInsertRequest> _insertValidator;

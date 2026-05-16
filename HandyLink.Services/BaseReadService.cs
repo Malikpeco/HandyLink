@@ -3,6 +3,7 @@ using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
 
@@ -10,7 +11,7 @@ using System.Linq.Dynamic.Core;
 namespace HandyLink.Services
 {
     public abstract class BaseReadService<TEntity, TResponse, TSearchObject> : IBaseReadService<TResponse, TSearchObject>
-        where TEntity : class
+        where TEntity : BaseEntity
         where TSearchObject : BaseSearchObject
     {
         protected readonly MapsterMapper.IMapper _mapper;
@@ -65,7 +66,10 @@ namespace HandyLink.Services
 
         public virtual async Task<TResponse> GetByIdAsync(int id)
         {
-            var entity = _dbContext.Set<TEntity>().Find(id);
+            var query = _dbContext.Set<TEntity>().AsQueryable();
+            query = await IncludeRelatedEntitiesAsync(query, null);
+
+            var entity = await query.FirstOrDefaultAsync(e => e.Id == id);
 
             if(entity == null)
             {
