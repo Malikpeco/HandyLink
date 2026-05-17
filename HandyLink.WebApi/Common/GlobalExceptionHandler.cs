@@ -1,6 +1,8 @@
 ﻿using HandyLink.Services.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace HandyLink.WebApi.Common
@@ -42,7 +44,7 @@ namespace HandyLink.WebApi.Common
                     Detail = exception.Message
                 },
 
-                HandyLinkNotFoundException=> new ProblemDetails
+                HandyLinkNotFoundException => new ProblemDetails
                 {
                     Status = StatusCodes.Status404NotFound,
                     Title = "Not Found",
@@ -53,7 +55,14 @@ namespace HandyLink.WebApi.Common
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Title = "Validation Error",
-                    Detail = "Errors: " +string.Join(", ", validationException.Errors.Select(e=>e.ErrorMessage))
+                    Detail = "Errors: " + string.Join(", ", validationException.Errors.Select(e => e.ErrorMessage))
+                },
+
+                DbUpdateException ex when ex.InnerException is SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627) => new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Conflict",
+                    Detail = "A record with the same value already exists."
                 },
 
                 _ => new ProblemDetails

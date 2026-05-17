@@ -24,22 +24,6 @@ namespace HandyLink.Services
         {
         }
 
-        public override async Task<CountryResponse> InsertAsync(CountryInsertRequest request)
-        {
-            await CheckCountryNameDuplicateAsync(request.Name);
-
-            return await base.InsertAsync(request);
-        }
-
-
-        public override async Task<CountryResponse> UpdateAsync(int id, CountryUpdateRequest request)
-        {
-            await CheckCountryNameDuplicateAsync(request.Name, id);
-
-            return await base.UpdateAsync(id, request);
-        }
-
-
         protected override IEnumerable<Country> ApplyFilters(IEnumerable<Country> query, CountrySearchObject? searchObject)
         {
             
@@ -50,16 +34,7 @@ namespace HandyLink.Services
 
             return query;
         }
-        private async Task CheckCountryNameDuplicateAsync(string? name, int? id = null)
-        {
-            var normalizedName = name?.Trim().ToLower();
-
-            if (string.IsNullOrWhiteSpace(normalizedName))
-                return;
-
-            if (await _dbContext.Countries.AnyAsync(c => c.Name.Trim().ToLower() == normalizedName && c.Id != id))
-                throw new HandyLinkConflictException($"Country with name {name?.Trim()} already exists.");
-        }
+        
 
 
     }

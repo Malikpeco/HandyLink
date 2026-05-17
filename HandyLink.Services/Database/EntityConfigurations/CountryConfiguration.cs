@@ -16,6 +16,7 @@ namespace HandyLink.Services.Database.EntityConfigurations
             base.Configure(builder);
             builder.ToTable("Countries");
             builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            builder.HasIndex(x => x.Name).IsUnique().HasFilter("[IsDeleted] = 0");
             
         }
     }

@@ -17,7 +17,9 @@ namespace HandyLink.Services.Database.EntityConfigurations
 
             builder.ToTable("JobStatuses");
             builder.Property(x => x.Name).IsRequired().HasMaxLength(50);
+            builder.HasIndex(x => x.Name).IsUnique().HasFilter("[IsDeleted] = 0");
             builder.Property(x => x.Code).IsRequired().HasMaxLength(50);
+            builder.HasIndex(x => x.Code).IsUnique().HasFilter("[IsDeleted] = 0");
             builder.Property(x => x.Description).IsRequired().HasMaxLength(500);
         }
     }

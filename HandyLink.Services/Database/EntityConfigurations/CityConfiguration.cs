@@ -14,6 +14,7 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.ToTable("Cities");
             builder.Property(x => x.Name).IsRequired().HasMaxLength(50);
             builder.Property(x => x.CountryId).IsRequired();
+            builder.HasIndex(x => new { x.Name,x.CountryId }).IsUnique().HasFilter("[IsDeleted] = 0");
 
             builder.HasOne(x => x.Country)
                 .WithMany(x => x.Cities)

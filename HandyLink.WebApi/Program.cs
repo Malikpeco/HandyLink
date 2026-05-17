@@ -23,7 +23,6 @@ namespace HandyLink.WebApi
             builder.Services.AddProblemDetails();
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            
             builder.Services.AddDbContext<HandyLinkDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
@@ -32,11 +31,14 @@ namespace HandyLink.WebApi
 
             builder.Services.AddScoped<ICountryService, CountryService>();
             builder.Services.AddScoped<ICityService, CityService>();
+            builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
 
             builder.Services.AddScoped<IValidator<CountryInsertRequest>, CountryInsertValidator>();
             builder.Services.AddScoped<IValidator<CountryUpdateRequest>, CountryUpdateValidator>();
             builder.Services.AddScoped<IValidator<CityInsertRequest>, CityInsertValidator>();
             builder.Services.AddScoped<IValidator<CityUpdateRequest>, CityUpdateValidator>();
+            builder.Services.AddScoped<IValidator<ServiceCategoryInsertRequest>, ServiceCategoryInsertValidator>();
+            builder.Services.AddScoped<IValidator<ServiceCategoryUpdateRequest>, ServiceCategoryUpdateValidator>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

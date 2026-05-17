@@ -8,7 +8,7 @@ namespace HandyLink.Services.Database.Entities
 {
     public class ServiceCategory : BaseEntity
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsActive { get; set; }
         public ICollection<HandymanServiceCategory> HandymanServiceCategories { get; set; } = new List<HandymanServiceCategory>();
