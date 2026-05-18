@@ -1,4 +1,4 @@
-﻿using HandyLink.Services.Database.Enums;
+﻿using HandyLink.Model.Database.Enums;
 
 namespace HandyLink.Services.Database.Entities
 {

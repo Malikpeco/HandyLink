@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HandyLink.Services.Database.Enums
+namespace HandyLink.Model.Database.Enums
 {
     public enum UserType
     {

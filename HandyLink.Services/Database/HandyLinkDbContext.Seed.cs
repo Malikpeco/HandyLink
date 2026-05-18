@@ -1,5 +1,5 @@
-﻿using HandyLink.Services.Database.Entities;
-using HandyLink.Services.Database.Enums;
+﻿using HandyLink.Model.Database.Enums;
+using HandyLink.Services.Database.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

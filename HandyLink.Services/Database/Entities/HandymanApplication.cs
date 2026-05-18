@@ -1,4 +1,4 @@
-﻿using HandyLink.Services.Database.Enums;
+﻿using HandyLink.Model.Database.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
