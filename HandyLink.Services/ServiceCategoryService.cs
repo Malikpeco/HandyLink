@@ -24,7 +24,8 @@ namespace HandyLink.Services
         {
             if (searchObject?.Name != null)
             {
-                query = query.Where(sc => sc.Name.ToLower().Contains(searchObject.Name.ToLower()));
+                var normalized = searchObject.Name.Trim().ToLower();
+                query = query.Where(sc => sc.Name.ToLower().Contains(normalized));
             }
             if (searchObject?.IsActive != null)
             {
