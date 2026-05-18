@@ -33,6 +33,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<ICityService, CityService>();
             builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
             builder.Services.AddScoped<IUserStatusService, UserStatusService>();
+            builder.Services.AddScoped<IJobStatusService, JobStatusService>();
 
             builder.Services.AddScoped<IValidator<CountryInsertRequest>, CountryInsertValidator>();
             builder.Services.AddScoped<IValidator<CountryUpdateRequest>, CountryUpdateValidator>();
@@ -42,6 +43,8 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<ServiceCategoryUpdateRequest>, ServiceCategoryUpdateValidator>();
             builder.Services.AddScoped<IValidator<UserStatusInsertRequest>, UserStatusInsertValidator>();
             builder.Services.AddScoped<IValidator<UserStatusUpdateRequest>, UserStatusUpdateValidator>();
+            builder.Services.AddScoped<IValidator<JobStatusInsertRequest>, JobStatusInsertValidator>();
+            builder.Services.AddScoped<IValidator<JobStatusUpdateRequest>, JobStatusUpdateValidator>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
