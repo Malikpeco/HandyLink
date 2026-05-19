@@ -2,6 +2,7 @@ using FluentValidation;
 using HandyLink.Model.Requests;
 using HandyLink.Services;
 using HandyLink.Services.Database;
+using HandyLink.Services.Hashing;
 using HandyLink.Services.Interfaces;
 using HandyLink.Services.Mapping;
 using HandyLink.Services.Validators;
@@ -38,6 +39,8 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IUserStatusService, UserStatusService>();
             builder.Services.AddScoped<IJobStatusService, JobStatusService>();
             builder.Services.AddScoped<IUserService, UserService>();
+
+            builder.Services.AddScoped<IHashingService, HashingService>();
 
             builder.Services.AddScoped<IValidator<CountryInsertRequest>, CountryInsertValidator>();
             builder.Services.AddScoped<IValidator<CountryUpdateRequest>, CountryUpdateValidator>();

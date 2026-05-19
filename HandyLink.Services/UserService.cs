@@ -6,6 +6,7 @@ using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Database.Entities;
 using HandyLink.Services.Exceptions;
+using HandyLink.Services.Hashing;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +20,12 @@ namespace HandyLink.Services
 {
     public class UserService : BaseCRUDService<User, UserResponse, UserSearchObject, UserInsertRequest, UserUpdateRequest>, IUserService
     {
-        public UserService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<UserInsertRequest> insertValidator, IValidator<UserUpdateRequest> updateValidator) : base(dbContext, mapper, insertValidator, updateValidator)
+
+        private readonly IHashingService _hashingService;
+
+        public UserService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<UserInsertRequest> insertValidator, IValidator<UserUpdateRequest> updateValidator, IHashingService hashingService) : base(dbContext, mapper, insertValidator, updateValidator)
         {
+            _hashingService = hashingService;
         }
 
         public override async Task<UserResponse> InsertAsync(UserInsertRequest request)
@@ -42,7 +47,11 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException("User status PENDING does not exist.");
             }
 
-                _dbContext.Set<User>().Add(entity);
+            var salt = _hashingService.GenerateSalt();
+            entity.PasswordSalt = salt;
+            entity.PasswordHash = _hashingService.HashText(request.Password, salt);
+
+            _dbContext.Set<User>().Add(entity);
             await _dbContext.SaveChangesAsync();
 
             return await Task.FromResult(_mapper.Map<UserResponse>(entity));
