@@ -1,5 +1,6 @@
 ﻿using Azure;
 using FluentValidation;
+using HandyLink.Model.Database.Enums;
 using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
@@ -47,11 +48,40 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException("User status PENDING does not exist.");
             }
 
+            var activeStatus = await _dbContext.UserStatuses.FirstOrDefaultAsync(x => x.Code == "ACTIVE");
+            if (activeStatus != null)
+            {
+                entity.UserStatusId = activeStatus.Id;
+            }
+            else
+            {
+                throw new HandyLinkNotFoundException("User status ACTIVE does not exist.");
+            }
+
             var salt = _hashingService.GenerateSalt();
             entity.PasswordSalt = salt;
             entity.PasswordHash = _hashingService.HashText(request.Password, salt);
 
-            _dbContext.Set<User>().Add(entity);
+            _dbContext.Users.Add(entity);
+
+            if(request.UserType == UserType.Admin)
+            {
+                _dbContext.AdminProfiles.Add(new AdminProfile
+                {
+                    User = entity
+                });
+                entity.UserStatusId = activeStatus.Id;
+            }
+            else if (request.UserType == UserType.Client)
+            {
+                _dbContext.ClientProfiles.Add(new ClientProfile
+                {
+                    User = entity
+                });
+                entity.UserStatusId = activeStatus.Id;
+            }
+            
+
             await _dbContext.SaveChangesAsync();
 
             return await Task.FromResult(_mapper.Map<UserResponse>(entity));
