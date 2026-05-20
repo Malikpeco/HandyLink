@@ -18,7 +18,6 @@ namespace HandyLink.Model.Responses
         public string UserType { get; set; } = string.Empty;
         public int CityId { get; set; }
         public string CityName { get; set; } = null!;
-        public int UserStatusId { get; set; }
-        public string UserStatusName { get; set; } = null!;
+        public UserStatusResponse Status { get; set; } = null!;
     }
 }

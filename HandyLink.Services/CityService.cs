@@ -58,8 +58,7 @@ namespace HandyLink.Services
 
         protected override async Task<IQueryable<City>> IncludeRelatedEntitiesAsync(IQueryable<City> query, CitySearchObject? searchObject)
         {
-            query = query.Include(c => c.Country);
-            return query;
+            return query.Include(c => c.Country);
         }
     }
 }
