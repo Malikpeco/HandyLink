@@ -5,6 +5,7 @@ using HandyLink.Model.SearchObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,6 +18,9 @@ namespace HandyLink.Services.Interfaces
 
         Task<HandymanApplicationDetailsResponse> GetByIdAsync(int id);
         Task<PageResult<HandymanApplicationListResponse>> GetAllAsync(HandymanApplicationSearchObject? search = null);
+
+        Task<HandymanApplicationDetailsResponse> SetDecisionAsync(int id, HandymanApplicationDecisionRequest request);
+
 
     }
 }

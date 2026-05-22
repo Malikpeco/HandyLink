@@ -1,5 +1,6 @@
 ﻿using Azure;
 using FluentValidation;
+using HandyLink.Model.Database.Enums;
 using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
@@ -10,6 +11,7 @@ using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 
 
 namespace HandyLink.Services
@@ -37,6 +39,13 @@ namespace HandyLink.Services
                 throw new HandyLinkValidationException(validationResult.Errors);
             }
 
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x=>x.Id==request.UserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.UserId} not found");
+
+            if (user.UserType != UserType.Handyman)
+                throw new HandyLinkNotFoundException($"User must have UserType.Handyman.");
+
             var serviceCategoryIdsExist = true;
             foreach (int id in request.ServiceCategoryIds)
             {
@@ -48,6 +57,9 @@ namespace HandyLink.Services
             }
 
             var entity = _mapper.Map<HandymanApplication>(request);
+
+            entity.Status = HandymanApplicationStatus.Pending;
+
             _dbContext.HandymanApplications.Add(entity);
 
             await _dbContext.SaveChangesAsync();
@@ -147,9 +159,8 @@ namespace HandyLink.Services
         {
 
             return query
-                .Include(x=>x.User)
-                    .ThenInclude(x=>x.City)
-               
+                .Include(x => x.User)
+                    .ThenInclude(x => x.City)
                 .Include(x => x.HandymanApplicationServiceCategories)
                     .ThenInclude(x => x.ServiceCategory)
 
@@ -157,8 +168,63 @@ namespace HandyLink.Services
 
                 .Include(x => x.HandymanApplicationDocuments)
 
-                .Include(x => x.HandymanApplicationReferences);
+                .Include(x => x.HandymanApplicationReferences)
+
+                .Include(x => x.User).ThenInclude(x => x.UserStatus);
+                
         }
 
+        public async Task<HandymanApplicationDetailsResponse> SetDecisionAsync(int id, HandymanApplicationDecisionRequest request)
+        {
+            var application = await _dbContext.HandymanApplications.FirstOrDefaultAsync(x => x.Id == id);
+            if (application == null) {
+                throw new HandyLinkNotFoundException($"HandymanApplication with id {id} not found.");
+            }
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == application.UserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"HandymanApplication is not assigned to a valid user. User with id {application.UserId} does not exist.");
+
+            if (application.Status != HandymanApplicationStatus.Pending)
+            {
+                throw new HandyLinkBusinessRuleException("Only pending applications can be approved or rejected.");
+            }
+
+            if (user.UserType != UserType.Handyman)
+            {
+                throw new HandyLinkBusinessRuleException("User must have UserType.Handyman.");
+            }
+
+
+            var activeStatus = await _dbContext.UserStatuses.FirstOrDefaultAsync(x => x.Code == "ACTIVE");
+            if (activeStatus == null)
+            {
+                throw new HandyLinkNotFoundException("User status ACTIVE does not exist.");
+            }
+            var rejectedStatus = await _dbContext.UserStatuses.FirstOrDefaultAsync(x => x.Code == "REJECTED");
+            if (rejectedStatus == null)
+            {
+                throw new HandyLinkNotFoundException("User status REJECTED does not exist.");
+            }
+
+
+
+            if (request.IsApproved)
+            {
+                application.Status = HandymanApplicationStatus.Approved;
+                user.UserStatusId = activeStatus.Id;
+            }
+            else
+            {
+                application.Status = HandymanApplicationStatus.Rejected;
+                user.UserStatusId = rejectedStatus.Id;
+            }
+
+
+            await _dbContext.SaveChangesAsync();
+
+            return await Task.FromResult(_mapper.Map<HandymanApplicationDetailsResponse>(application));
+
+        }
     }
 }

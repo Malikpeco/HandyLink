@@ -15,6 +15,7 @@ namespace HandyLink.Model.Responses
         public string UserLastName { get; set; } = string.Empty;
         public int ExperienceYears { get; set; }
         public string Status { get; set; } = string.Empty;
+        public DateTime SentAt { get; set; }
 
     }
 }

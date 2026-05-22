@@ -40,6 +40,12 @@ namespace HandyLink.WebApi.Controllers
         {
             await _service.DeleteAsync(id);
         }
+
+        [HttpPut("{id}/decision")]
+        public async Task<HandymanApplicationDetailsResponse> SetDecision(int id, [FromBody]HandymanApplicationDecisionRequest request)
+        {
+            return await _service.SetDecisionAsync(id, request);
+        }
     }
 
 

@@ -72,21 +72,21 @@ namespace HandyLink.Services.Database
                     Id = 1,
                     Name = "Active",
                     Code = "ACTIVE",
-                    Description = "User can use the application normally.",
+                    Description = "User can use the application normally as a client or handyman.",
                 },
                 new
                 {
                     Id = 2,
                     Name = "Pending",
                     Code = "PENDING",
-                    Description = "User is waiting for approval.",
+                    Description = "User is waiting for handyman application approval.",
                 },
                 new
                 {
                     Id = 3,
                     Name = "Rejected",
                     Code = "REJECTED",
-                    Description = "User/application was rejected.",
+                    Description = "Users handyman application was rejected.",
                 },
                 new
                 {

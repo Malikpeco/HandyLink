@@ -38,22 +38,15 @@ namespace HandyLink.Services
             }
 
             var entity = MapInsertRequestToEntity(request);
+            
             var pendingStatus = await _dbContext.UserStatuses.FirstOrDefaultAsync(x => x.Code == "PENDING");
-            if (pendingStatus != null)
-            {
-                entity.UserStatusId = pendingStatus.Id;
-            }
-            else
+            if (pendingStatus == null)
             {
                 throw new HandyLinkNotFoundException("User status PENDING does not exist.");
             }
 
             var activeStatus = await _dbContext.UserStatuses.FirstOrDefaultAsync(x => x.Code == "ACTIVE");
-            if (activeStatus != null)
-            {
-                entity.UserStatusId = activeStatus.Id;
-            }
-            else
+            if (activeStatus == null)
             {
                 throw new HandyLinkNotFoundException("User status ACTIVE does not exist.");
             }
@@ -80,9 +73,13 @@ namespace HandyLink.Services
                 });
                 entity.UserStatusId = activeStatus.Id;
             }
-            
+            else if (request.UserType == UserType.Handyman)
+            {
+                entity.UserStatusId = pendingStatus.Id;
+            }
 
-            await _dbContext.SaveChangesAsync();
+
+                await _dbContext.SaveChangesAsync();
 
             return await Task.FromResult(_mapper.Map<UserResponse>(entity));
         }

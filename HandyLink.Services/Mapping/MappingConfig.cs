@@ -12,11 +12,13 @@ namespace HandyLink.Services.Mapping
         {
             TypeAdapterConfig<User, UserResponse>
                 .NewConfig()
-                .Map(dest => dest.UserType, src => src.UserType.ToString());
+                .Map(dest => dest.UserType, src => src.UserType.ToString())
+                .Map(dest => dest.Status, src => src.UserStatus);
 
             TypeAdapterConfig<HandymanApplication, HandymanApplicationListResponse>
                 .NewConfig()
-                .Map(dest => dest.Status, src => src.Status.ToString());
+                .Map(dest => dest.Status, src => src.Status.ToString())
+                .Map(dest => dest.SentAt, src => src.CreatedAtUtc);
 
             TypeAdapterConfig<HandymanApplication, HandymanApplicationDetailsResponse>
                 .NewConfig()
