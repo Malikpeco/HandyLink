@@ -145,7 +145,7 @@ namespace HandyLink.Services
             {
                 var normalized = searchObject.SearchTerm.Trim().ToLower();
                 query = query
-                    .Where(x => ($"{x.User.FirstName} {x.User.LastName}").ToLower().Contains(normalized));
+                    .Where(x => (x.User.FirstName + x.User.LastName).ToLower().Contains(normalized));
             }
             if(searchObject?.Status != null)
             {

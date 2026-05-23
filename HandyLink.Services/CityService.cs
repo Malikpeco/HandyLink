@@ -32,6 +32,16 @@ namespace HandyLink.Services
             return await base.UpdateAsync(id, request);
         }
 
+        public override async Task DeleteAsync(int id)
+        {
+            if(await _dbContext.Users.AnyAsync(x => x.CityId == id) || await _dbContext.Jobs.AnyAsync(x => x.CityId == id))
+            {
+                throw new HandyLinkBusinessRuleException($"Cannot delete city with id: {id} since it is currently in use.");
+            }
+            await base.DeleteAsync(id);
+            
+        }
+
 
 
 

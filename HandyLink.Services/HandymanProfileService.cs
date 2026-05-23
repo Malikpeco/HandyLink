@@ -1,4 +1,6 @@
-﻿using FluentValidation;
+﻿using Azure;
+using Azure.Core;
+using FluentValidation;
 using HandyLink.Model.Database.Enums;
 using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
@@ -30,6 +32,10 @@ namespace HandyLink.Services
             _insertValidator = insertValidator;
         }
 
+        public Task<HandymanProfileListResponse> GetAllAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<HandymanProfileDetailsResponse> GetByIdAsync(int id)
         {
@@ -40,8 +46,21 @@ namespace HandyLink.Services
 
             if (profile == null)
                 throw new HandyLinkNotFoundException($"HandymanProfile with id {id} not found.");
+            
+            var response = _mapper.Map<HandymanProfileDetailsResponse>(profile);
 
-            return _mapper.Map<HandymanProfileDetailsResponse>(profile);
+            var application = await _dbContext.HandymanApplications.Where(x => x.UserId == profile.UserId && x.Status == HandymanApplicationStatus.Approved).OrderByDescending(x => x.CreatedAtUtc).FirstOrDefaultAsync();
+            if (application == null)
+            {
+                throw new HandyLinkNotFoundException($"HandymanApplication not found for HandymanProfile with id: {id}.");
+            }
+
+            response.ExperienceYears = application.ExperienceYears;
+            response.JobsCompleted = profile.Jobs.Count;
+            response.AverageRating = profile.Reviews.Count==0?0:profile.Reviews.Average(r => r.Rating);
+            response.ReviewsCount = profile.Reviews.Count;
+
+            return response;
         }
 
 
