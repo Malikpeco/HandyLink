@@ -11,6 +11,7 @@ namespace HandyLink.Services.Interfaces
     public interface IHandymanProfileService
     {
         Task<HandymanProfileDetailsResponse> GetByIdAsync(int id);
+        //Task<HandymanProfileListResponse> GetAllAsync(int id);
         Task<HandymanProfileDetailsResponse> InsertAsync(HandymanProfileInsertRequest request);
     }
 }

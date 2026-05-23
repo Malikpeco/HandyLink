@@ -40,6 +40,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IJobStatusService, JobStatusService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IHandymanApplicationService, HandymanApplicationService>();
+            builder.Services.AddScoped<IHandymanProfileService, HandymanProfileService>();
 
             builder.Services.AddScoped<IHashingService, HashingService>();
 
@@ -56,6 +57,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<UserInsertRequest>, UserInsertValidator>();
             builder.Services.AddScoped<IValidator<UserUpdateRequest>, UserUpdateValidator>();
             builder.Services.AddScoped<IValidator<HandymanApplicationInsertRequest>, HandymanApplicationInsertValidator>();
+            builder.Services.AddScoped<IValidator<HandymanProfileInsertRequest>, HandymanProfileInsertValidator>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

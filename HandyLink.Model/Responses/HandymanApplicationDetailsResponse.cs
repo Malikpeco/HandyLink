@@ -9,6 +9,7 @@ namespace HandyLink.Model.Responses
 {
     public class HandymanApplicationDetailsResponse
     {
+        public int Id { get; set; }
         public UserResponse User { get; set; } = null!;
         public int ExperienceYears { get; set; }
         public string WorkDescription { get; set; } = string.Empty;

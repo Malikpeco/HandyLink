@@ -90,7 +90,9 @@ namespace HandyLink.Services
 
                 .Include(x => x.HandymanWorkPhotos)
 
-                .Include(x => x.Reviews);
+                .Include(x => x.Reviews)
+                .Include(x => x.User).ThenInclude(x => x.UserStatus);
+            
 
         }
 
