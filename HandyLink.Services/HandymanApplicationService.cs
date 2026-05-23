@@ -41,7 +41,7 @@ namespace HandyLink.Services
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(x=>x.Id==request.UserId);
             if (user == null)
-                throw new HandyLinkNotFoundException($"User with id {request.UserId} not found");
+                throw new HandyLinkNotFoundException($"User with id {request.UserId} not found");//remove this and userid from request once currentuser service is made
 
             if (user.UserType != UserType.Handyman)
                 throw new HandyLinkNotFoundException($"User must have UserType.Handyman.");

@@ -12,7 +12,7 @@ namespace HandyLink.Services.Validators
     {
         public HandymanApplicationInsertValidator() 
         {
-            RuleFor(x => x.UserId).NotEmpty().WithMessage("UserId is required.");
+            RuleFor(x => x.UserId).NotEmpty().WithMessage("UserId is required.");//remove this and userid from request once currentuser service is made
             RuleFor(x => x.ExperienceYears).NotEmpty().WithMessage("ExperienceYears is required.")
                 .GreaterThanOrEqualTo(0).WithMessage("ExperienceYears cannot be less that 0.");
             RuleFor(x => x.WorkDescription).NotEmpty().WithMessage("WorkDescription is required.")

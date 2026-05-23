@@ -10,7 +10,7 @@ namespace HandyLink.Model.Requests
 {
     public class HandymanApplicationInsertRequest
     {
-        public int UserId { get; set; }
+        public int UserId { get; set; }//remove once currentuserservice is made.
         public int ExperienceYears { get; set; }
         public string WorkDescription { get; set; } = string.Empty;
         public List<int> ServiceCategoryIds { get; set; } = new();
