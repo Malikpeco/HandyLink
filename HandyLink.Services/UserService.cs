@@ -84,7 +84,28 @@ namespace HandyLink.Services
             return await Task.FromResult(_mapper.Map<UserResponse>(entity));
         }
 
-        
+
+        public override async Task DeleteAsync(int id)
+        {
+            var entity = await _dbContext.Set<User>().Include(x=>x.HandymanProfile).Include(x=>x.ClientProfile).FirstOrDefaultAsync(x=>x.Id==id);
+
+            if (entity == null)
+                throw new HandyLinkNotFoundException($"User with id {id} not found.");
+
+
+            if (entity.HandymanProfile != null)
+            {
+                _dbContext.HandymanProfiles.Remove(entity.HandymanProfile);
+            }
+            if (entity.ClientProfile != null)
+            {
+                _dbContext.ClientProfiles.Remove(entity.ClientProfile);
+            }
+
+            _dbContext.Set<User>().Remove(entity);
+            await _dbContext.SaveChangesAsync();
+        }
+
 
         protected override IEnumerable<User> ApplyFilters(IEnumerable<User> query, UserSearchObject? searchObject)
         {
