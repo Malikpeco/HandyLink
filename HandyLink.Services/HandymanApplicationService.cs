@@ -46,6 +46,10 @@ namespace HandyLink.Services
             if (user.UserType != UserType.Handyman)
                 throw new HandyLinkNotFoundException($"User must have UserType.Handyman.");
 
+            if (await _dbContext.HandymanApplications.AnyAsync(x => x.UserId == request.UserId && (x.Status == HandymanApplicationStatus.Pending || x.Status == HandymanApplicationStatus.Approved)))
+                throw new HandyLinkBusinessRuleException($"User with id: {request.UserId} already has a pending or approved HandymanApplication.");
+
+
             var serviceCategoryIdsExist = true;
             foreach (int id in request.ServiceCategoryIds)
             {
@@ -125,18 +129,7 @@ namespace HandyLink.Services
 
 
 
-        public async Task DeleteAsync(int id)
-        {
-            var entity = await _dbContext.HandymanApplications.FirstOrDefaultAsync(x=>x.Id==id);
 
-            if (entity == null)
-            {
-                throw new HandyLinkNotFoundException($"HandymanApplication with id {id} does not exist.");
-            }
-
-            _dbContext.HandymanApplications.Remove(entity);
-            await _dbContext.SaveChangesAsync();
-        }
 
 
         private IQueryable<HandymanApplication> ApplyFilters(IQueryable<HandymanApplication> query, HandymanApplicationSearchObject? searchObject)
@@ -145,7 +138,7 @@ namespace HandyLink.Services
             {
                 var normalized = searchObject.SearchTerm.Trim().ToLower();
                 query = query
-                    .Where(x => (x.User.FirstName + x.User.LastName).ToLower().Contains(normalized));
+                    .Where(x => (x.User.FirstName + " " + x.User.LastName).ToLower().Contains(normalized));
             }
             if(searchObject?.Status != null)
             {

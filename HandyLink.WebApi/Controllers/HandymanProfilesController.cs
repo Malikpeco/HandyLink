@@ -17,11 +17,11 @@ namespace HandyLink.WebApi.Controllers
             _service = service;
         }
 
-        //[HttpGet]
-        //public async Task<PageResult<HandymanProfileListResponse>> GetAll([FromQuery] HandymanProfileSearchObject? search = null)
-        //{
-        //    return await _service.GetAllAsync(search);
-        //}
+        [HttpGet]
+        public async Task<PageResult<HandymanProfileListResponse>> GetAll([FromQuery] HandymanProfileSearchObject? search = null)
+        {
+            return await _service.GetAllAsync(search);
+        }
 
         [HttpGet("{id}")]
         public async Task<HandymanProfileDetailsResponse> GetById(int id)

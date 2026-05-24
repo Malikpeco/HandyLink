@@ -66,6 +66,20 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.ServiceCategoryId, src => src.ServiceCategoryId)
                 .Map(dest => dest.ServiceCategoryName, src => src.ServiceCategory.Name);
 
+            TypeAdapterConfig<HandymanProfile, HandymanProfileListResponse>
+                .NewConfig()
+                .Map(dest => dest.UserFullName, src => (src.User.FirstName + " " + src.User.LastName))
+                .Map(dest => dest.AverageRating, src => src.Reviews.Count==0?0:src.Reviews.Average(x => x.Rating))
+                .Map(dest => dest.JobsCompleted, src => src.Jobs.Where(x => x.JobStatus.Code == "COMPLETED").Count())
+                .Map(dest => dest.HandymanServiceCategories, src => src.HandymanServiceCategories);
+
+            TypeAdapterConfig<HandymanServiceCategory, HandymanServiceCategoryResponse>
+                .NewConfig()
+                .Map(dest => dest.ServiceCategoryId, src => src.ServiceCategoryId)
+                .Map(dest => dest.ServiceCategoryName, src => src.ServiceCategory.Name);
+
+
+
         }
     }
 }

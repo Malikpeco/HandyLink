@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace HandyLink.Services.Interfaces
     public interface IHandymanProfileService
     {
         Task<HandymanProfileDetailsResponse> GetByIdAsync(int id);
-        Task<HandymanProfileListResponse> GetAllAsync(int id);
+        Task<PageResult<HandymanProfileListResponse>> GetAllAsync(HandymanProfileSearchObject? searchObject = null);
         Task<HandymanProfileDetailsResponse> InsertAsync(HandymanProfileInsertRequest request);
     }
 }

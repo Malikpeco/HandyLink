@@ -14,7 +14,6 @@ namespace HandyLink.Services.Interfaces
     public interface IHandymanApplicationService 
     {
         Task<HandymanApplicationDetailsResponse> InsertAsync(HandymanApplicationInsertRequest request);
-        Task DeleteAsync(int id);
 
         Task<HandymanApplicationDetailsResponse> GetByIdAsync(int id);
         Task<PageResult<HandymanApplicationListResponse>> GetAllAsync(HandymanApplicationSearchObject? search = null);

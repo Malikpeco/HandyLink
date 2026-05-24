@@ -11,11 +11,8 @@ using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Dynamic.Core;
+
 
 namespace HandyLink.Services
 {
@@ -32,9 +29,42 @@ namespace HandyLink.Services
             _insertValidator = insertValidator;
         }
 
-        public Task<HandymanProfileListResponse> GetAllAsync(int id)
+        public virtual async Task<PageResult<HandymanProfileListResponse>> GetAllAsync(HandymanProfileSearchObject? searchObject = null)
         {
-            throw new NotImplementedException();
+            IEnumerable<HandymanProfile> query = _dbContext.Set<HandymanProfile>();
+
+            query = IncludeRelatedEntities(query.AsQueryable(), searchObject);
+            query = ApplyFilters(query, searchObject);
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
+                }
+                query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                query = query.Take(searchObject.PageSize);
+
+            }
+
+            var list = query.Select(item => _mapper.Map<HandymanProfileListResponse>(item)).ToList();
+
+            var pageResult = new PageResult<HandymanProfileListResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+
+
+
         }
 
         public async Task<HandymanProfileDetailsResponse> GetByIdAsync(int id)
@@ -55,8 +85,7 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException($"HandymanApplication not found for HandymanProfile with id: {id}.");
             }
 
-            response.ExperienceYears = application.ExperienceYears;
-            response.JobsCompleted = profile.Jobs.Count;
+            response.JobsCompleted = profile.Jobs.Where(x=>x.JobStatus.Code=="COMPLETED").Count();
             response.AverageRating = profile.Reviews.Count==0?0:profile.Reviews.Average(r => r.Rating);
             response.ReviewsCount = profile.Reviews.Count;
 
@@ -78,7 +107,11 @@ namespace HandyLink.Services
 
             var entity = _mapper.Map<HandymanProfile>(request);
 
-            var application = await _dbContext.HandymanApplications.Where(x => x.UserId == request.UserId && x.Status == HandymanApplicationStatus.Approved).OrderByDescending(x => x.CreatedAtUtc).FirstOrDefaultAsync();
+            var application = await _dbContext.HandymanApplications
+                    .Include(x => x.HandymanApplicationServiceCategories)
+                    .Where(x => x.UserId == request.UserId && x.Status == HandymanApplicationStatus.Approved).
+                    OrderByDescending(x => x.CreatedAtUtc)
+                    .FirstOrDefaultAsync();
             if (application == null) {
                 throw new HandyLinkNotFoundException($"User does not have an approved HandymanApplication.");
             }
@@ -88,15 +121,39 @@ namespace HandyLink.Services
                 {
                     ServiceCategoryId = x.ServiceCategoryId
                 }).ToList();
+            entity.ExperienceYears = application.ExperienceYears;
+
 
             _dbContext.HandymanProfiles.Add(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();        
 
             return await Task.FromResult(_mapper.Map<HandymanProfileDetailsResponse>(entity));
         }
 
 
 
+        private IEnumerable<HandymanProfile> ApplyFilters(IEnumerable<HandymanProfile> query, HandymanProfileSearchObject? searchObject)
+        {
+            if (searchObject?.SearchTerm != null)
+            {
+                var normalized = searchObject.SearchTerm.Trim().ToLower();
+                query = query
+                    .Where(x => (x.User.FirstName + " " + x.User.LastName).ToLower().Contains(normalized));
+            }
+            if (searchObject?.CityId != null)
+            {
+                query = query.Where(x => x.User.CityId== searchObject.CityId);
+            }
+            if (searchObject?.ServiceCategoryId != null)
+            {
+                query = query.Where(x => x.HandymanServiceCategories.Any(sc=>sc.ServiceCategoryId==searchObject.ServiceCategoryId));
+            }
+            if (searchObject?.MinExperienceYears != null)
+            {
+                query = query.Where(x => x.ExperienceYears>=searchObject.MinExperienceYears);
+            }
+            return query;
+        }
 
         private IQueryable<HandymanProfile> IncludeRelatedEntities(IQueryable<HandymanProfile> query, HandymanProfileSearchObject? searchObject)
         {
@@ -110,7 +167,8 @@ namespace HandyLink.Services
                 .Include(x => x.HandymanWorkPhotos)
 
                 .Include(x => x.Reviews)
-                .Include(x => x.User).ThenInclude(x => x.UserStatus);
+                .Include(x => x.User).ThenInclude(x => x.UserStatus)
+                .Include(x => x.Jobs).ThenInclude(x=>x.JobStatus);
             
 
         }
