@@ -14,5 +14,7 @@ namespace HandyLink.Services.Interfaces
         Task<HandymanProfileDetailsResponse> GetByIdAsync(int id);
         Task<PageResult<HandymanProfileListResponse>> GetAllAsync(HandymanProfileSearchObject? searchObject = null);
         Task<HandymanProfileDetailsResponse> InsertAsync(HandymanProfileInsertRequest request);
+        Task<HandymanProfileDetailsResponse> UpdateAsync(int id, HandymanProfileUpdateRequest request);
+
     }
 }

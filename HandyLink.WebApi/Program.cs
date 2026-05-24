@@ -58,6 +58,8 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<UserUpdateRequest>, UserUpdateValidator>();
             builder.Services.AddScoped<IValidator<HandymanApplicationInsertRequest>, HandymanApplicationInsertValidator>();
             builder.Services.AddScoped<IValidator<HandymanProfileInsertRequest>, HandymanProfileInsertValidator>();
+            builder.Services.AddScoped<IValidator<HandymanProfileUpdateRequest>, HandymanProfileUpdateValidator>();
+
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

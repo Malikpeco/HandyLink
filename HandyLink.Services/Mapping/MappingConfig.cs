@@ -78,6 +78,12 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.ServiceCategoryId, src => src.ServiceCategoryId)
                 .Map(dest => dest.ServiceCategoryName, src => src.ServiceCategory.Name);
 
+            TypeAdapterConfig<HandymanProfileUpdateRequest, HandymanProfile>
+                .NewConfig()
+                .Ignore(dest => dest.HandymanWorkPhotos);
+
+
+
 
 
         }

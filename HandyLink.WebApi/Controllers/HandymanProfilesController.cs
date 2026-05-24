@@ -1,4 +1,5 @@
-﻿using HandyLink.Model.Requests;
+﻿using Azure;
+using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Interfaces;
@@ -33,6 +34,13 @@ namespace HandyLink.WebApi.Controllers
         public async Task<HandymanProfileDetailsResponse> Create([FromBody] HandymanProfileInsertRequest request)
         {
             return await _service.InsertAsync(request);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<HandymanProfileDetailsResponse>> Update(int id, [FromBody] HandymanProfileUpdateRequest request)
+        {
+            var result = await _service.UpdateAsync(id, request);
+            return result;
         }
 
         //[HttpDelete("{id}")]

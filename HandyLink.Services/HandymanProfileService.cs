@@ -21,12 +21,14 @@ namespace HandyLink.Services
         private readonly HandyLinkDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly IValidator<HandymanProfileInsertRequest> _insertValidator;
+        private readonly IValidator<HandymanProfileUpdateRequest> _updateValidator;
         
-        public HandymanProfileService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<HandymanProfileInsertRequest> insertValidator)
+        public HandymanProfileService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<HandymanProfileInsertRequest> insertValidator, IValidator<HandymanProfileUpdateRequest> updateValidator)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _insertValidator = insertValidator;
+            _updateValidator = updateValidator;
         }
 
         public virtual async Task<PageResult<HandymanProfileListResponse>> GetAllAsync(HandymanProfileSearchObject? searchObject = null)
@@ -129,6 +131,63 @@ namespace HandyLink.Services
 
             return await Task.FromResult(_mapper.Map<HandymanProfileDetailsResponse>(entity));
         }
+
+
+        public async Task<HandymanProfileDetailsResponse> UpdateAsync(int id, HandymanProfileUpdateRequest request)
+        {
+            var validationResult = await _updateValidator.ValidateAsync(request);
+            if (validationResult.IsValid == false)
+            {
+                throw new HandyLinkValidationException(validationResult.Errors);
+            }
+
+
+            var entity = await _dbContext.HandymanProfiles.Include(x=>x.HandymanServiceCategories).FirstOrDefaultAsync(x=>x.Id==id);
+            if (entity == null)
+                throw new HandyLinkNotFoundException($"HandymanProfile with id: {id} not found");
+
+            _mapper.Map(request, entity);
+
+            if (request.HandymanWorkPhotos != null)
+            {
+                _dbContext.HandymanWorkPhotos.RemoveRange(entity.HandymanWorkPhotos);
+                entity.HandymanWorkPhotos = request.HandymanWorkPhotos
+                    .Select(x => new HandymanWorkPhoto
+                    {
+                        HandymanProfileId=id,
+                        ImageBase64= x.ImageBase64
+                    }).ToList();
+            }
+
+            if (request.ServiceCategoryIds != null)
+            {
+                var serviceCategoryIdsExist = true;
+                foreach (int scid in request.ServiceCategoryIds)
+                {
+                    serviceCategoryIdsExist = await _dbContext.ServiceCategories.AnyAsync(x => x.Id == id);
+                    if (!serviceCategoryIdsExist)
+                    {
+                        throw new HandyLinkNotFoundException($"ServiceCategoryId {scid} does not exist.");
+                    }
+                }
+
+                _dbContext.HandymanServiceCategories.RemoveRange(entity.HandymanServiceCategories);
+
+
+                entity.HandymanServiceCategories = request.ServiceCategoryIds
+                    .Select(x => new HandymanServiceCategory
+                    {
+                        HandymanProfileId = id,
+                        ServiceCategoryId = x
+                    }).ToList();
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return _mapper.Map<HandymanProfileDetailsResponse>(entity);
+        }
+
+
+
 
 
 
