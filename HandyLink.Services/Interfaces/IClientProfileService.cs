@@ -9,12 +9,8 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Services.Interfaces
 {
-    public interface IClientProfileService
+    public interface IClientProfileService : IBaseReadService<ClientProfileResponse, ClientProfileSearchObject>
     {
-        Task<ClientProfileDetailsResponse> GetByIdAsync(int id);
-        //Task<PageResult<ClientProfileListResponse>> GetAllAsync(ClientProfileSearchObject? searchObject = null);
-        //Task<ClientProfileDetailsResponse> InsertAsync(ClientProfileInsertRequest request);
-        //Task<ClientProfileDetailsResponse> UpdateAsync(int id, ClientProfileUpdateRequest request);
 
     }
 }

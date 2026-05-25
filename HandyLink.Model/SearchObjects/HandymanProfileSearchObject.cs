@@ -12,5 +12,6 @@ namespace HandyLink.Model.SearchObjects
         public int? CityId { get; set; }
         public int? ServiceCategoryId { get; set; }
         public int? MinExperienceYears { get; set; }
+        public string? UserStatus { get; set; }
     }
 }

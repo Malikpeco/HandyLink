@@ -211,6 +211,10 @@ namespace HandyLink.Services
             {
                 query = query.Where(x => x.ExperienceYears>=searchObject.MinExperienceYears);
             }
+            if (searchObject?.UserStatus != null)
+            {
+                query = query.Where(x => x.User.UserStatus.Code == searchObject.UserStatus);
+            }
             return query;
         }
 

@@ -71,6 +71,8 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.UserFullName, src => (src.User.FirstName + " " + src.User.LastName))
                 .Map(dest => dest.AverageRating, src => src.Reviews.Count==0?0:src.Reviews.Average(x => x.Rating))
                 .Map(dest => dest.JobsCompleted, src => src.Jobs.Where(x => x.JobStatus.Code == "COMPLETED").Count())
+                .Map(dest => dest.CityName, src => src.User.City.Name)
+                .Map(dest => dest.ProfileImageBase64, src => src.User.ProfileImageBase64)
                 .Map(dest => dest.HandymanServiceCategories, src => src.HandymanServiceCategories);
 
             TypeAdapterConfig<HandymanServiceCategory, HandymanServiceCategoryResponse>
@@ -81,6 +83,11 @@ namespace HandyLink.Services.Mapping
             TypeAdapterConfig<HandymanProfileUpdateRequest, HandymanProfile>
                 .NewConfig()
                 .Ignore(dest => dest.HandymanWorkPhotos);
+            TypeAdapterConfig<ClientProfile, ClientProfileResponse>
+                .NewConfig()
+                .Map(dest => dest.User, src => src.User)
+                .Map(dest => dest.CompletedJobs, src => src.Jobs.Where(x => x.JobStatus.Code == "COMPLETED").Count())
+                .Map(dest => dest.ReviewsCount, src => src.Reviews.Count());
 
 
 

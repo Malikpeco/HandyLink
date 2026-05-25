@@ -9,24 +9,18 @@ namespace HandyLink.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ClientProfilesController : ControllerBase
+    public class ClientProfilesController : BaseReadController<ClientProfileResponse, ClientProfileSearchObject, IClientProfileService>
     {
-        private readonly IClientProfileService _service;
 
-        public ClientProfilesController(IClientProfileService service)
+        public ClientProfilesController(IClientProfileService service) : base(service)
         {
-            _service = service;
+
         }
-
         
+    
 
-        [HttpGet("{id}")]
-        public async Task<ClientProfileDetailsResponse> GetById(int id)
-        {
-            return await _service.GetByIdAsync(id);
-        }
 
-        
+
 
     }
 

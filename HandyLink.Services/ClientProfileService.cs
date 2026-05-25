@@ -16,47 +16,72 @@ using System.Linq.Dynamic.Core;
 
 namespace HandyLink.Services
 {
-    public class ClientProfileService : IClientProfileService
+    public class ClientProfileService : BaseReadService<ClientProfile, ClientProfileResponse, ClientProfileSearchObject>, IClientProfileService
     {
-        private readonly HandyLinkDbContext _dbContext;
-        private readonly IMapper _mapper;
-        //private readonly IValidator<ClientProfileInsertRequest> _insertValidator;
-        //private readonly IValidator<ClientProfileUpdateRequest> _updateValidator;
-        
-        public ClientProfileService(HandyLinkDbContext dbContext, IMapper mapper/*, IValidator<ClientProfileInsertRequest> insertValidator, IValidator<ClientProfileUpdateRequest> updateValidator*/)
+        public ClientProfileService(IMapper mapper, HandyLinkDbContext dbContext) : base(mapper, dbContext)
         {
-            _dbContext = dbContext;
-            _mapper = mapper;
-            //_insertValidator = insertValidator;
-            //_updateValidator = updateValidator;
         }
 
-        
-
-        public async Task<ClientProfileDetailsResponse> GetByIdAsync(int id)
+        public override async Task<ClientProfileResponse> GetByIdAsync(int id)
         {
             var query = _dbContext.ClientProfiles.AsQueryable();
-            query = IncludeRelatedEntities(query, null);
+            query = await IncludeRelatedEntitiesAsync(query, null);
 
             var profile = await query.FirstOrDefaultAsync(x => x.Id == id);
 
             if (profile == null)
                 throw new HandyLinkNotFoundException($"ClientProfile with id {id} not found.");
             
-            var response = _mapper.Map<ClientProfileDetailsResponse>(profile);
+            var response = _mapper.Map<ClientProfileResponse>(profile);
 
             return response;
         }
 
 
-        
+        public override async Task<PageResult<ClientProfileResponse>> GetAllAsync(ClientProfileSearchObject? searchObject = null)
+        {
+            IEnumerable<ClientProfile> query = _dbContext.Set<ClientProfile>();
+
+            query = await IncludeRelatedEntitiesAsync(query.AsQueryable(), searchObject);
+            query = ApplyFilters(query, searchObject);
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
+                }
+                query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                query = query.Take(searchObject.PageSize);
+
+            }
+
+            var list = query.Select(item => _mapper.Map<ClientProfileResponse>(item)).ToList();
+
+            var pageResult = new PageResult<ClientProfileResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+        }
 
 
 
 
 
 
-        private IEnumerable<ClientProfile> ApplyFilters(IEnumerable<ClientProfile> query, ClientProfileSearchObject? searchObject)
+
+
+
+        protected override IEnumerable<ClientProfile> ApplyFilters(IEnumerable<ClientProfile> query, ClientProfileSearchObject? searchObject)
         {
             if (searchObject?.SearchTerm != null)
             {
@@ -66,23 +91,32 @@ namespace HandyLink.Services
             }
             if (searchObject?.CityId != null)
             {
-                query = query.Where(x => x.User.CityId== searchObject.CityId);
+                query = query.Where(x => x.User.CityId == searchObject.CityId);
             }
-            
+            if (searchObject?.UserStatus != null)
+            {
+                query = query.Where(x => x.User.UserStatus.Code == searchObject.UserStatus);
+            }
             return query;
         }
 
-        private IQueryable<ClientProfile> IncludeRelatedEntities(IQueryable<ClientProfile> query, ClientProfileSearchObject? searchObject)
+
+
+
+
+        protected override async Task<IQueryable<ClientProfile>> IncludeRelatedEntitiesAsync(IQueryable<ClientProfile> query, ClientProfileSearchObject? searchObject)
         {
 
             return query
-                .Include(x => x.User)
-                    .ThenInclude(x => x.City)
-
+                .Include(x => x.User).ThenInclude(x => x.City)
+                .Include(x=>x.Reviews)
+                .Include(x=>x.Jobs)
                 .Include(x => x.User).ThenInclude(x => x.UserStatus);
+
             
 
         }
 
+        
     }
 }

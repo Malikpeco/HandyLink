@@ -10,5 +10,6 @@ namespace HandyLink.Model.SearchObjects
     {
         public string? SearchTerm { get; set; }
         public int? CityId { get; set; }
+        public string? UserStatus { get; set; }
     }
 }

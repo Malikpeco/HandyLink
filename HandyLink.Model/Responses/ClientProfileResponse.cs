@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Model.Responses
 {
-    public class ClientProfileDetailsResponse
+    public class ClientProfileResponse
     {
         public int Id { get; set; }
         public int UserId { get; set; }
         public UserResponse User { get; set; } = null!;
+        public int CompletedJobs { get; set; }
+        public int ReviewsCount { get; set; }
     }
 
 }
