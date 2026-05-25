@@ -41,6 +41,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IHandymanApplicationService, HandymanApplicationService>();
             builder.Services.AddScoped<IHandymanProfileService, HandymanProfileService>();
+            builder.Services.AddScoped<IClientProfileService, ClientProfileService>();
 
             builder.Services.AddScoped<IHashingService, HashingService>();
 
