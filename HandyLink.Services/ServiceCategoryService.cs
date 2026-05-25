@@ -4,8 +4,10 @@ using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Database.Entities;
+using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,16 @@ namespace HandyLink.Services
     {
         public ServiceCategoryService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<ServiceCategoryInsertRequest> insertValidator, IValidator<ServiceCategoryUpdateRequest> updateValidator) : base(dbContext, mapper, insertValidator, updateValidator)
         {
+        }
+
+        public override async Task DeleteAsync(int id)
+        {
+            if (await _dbContext.HandymanServiceCategories.AnyAsync(x => x.ServiceCategoryId == id)
+                || await _dbContext.HandymanApplicationServiceCategories.AnyAsync(x => x.ServiceCategoryId == id)
+                || await _dbContext.Jobs.AnyAsync(x => x.ServiceCategoryId == id))
+                throw new HandyLinkBusinessRuleException($"ServiceCategory with id {id} is being used and cannot be deleted.");
+
+            await base.DeleteAsync(id);
         }
 
         protected override IEnumerable<ServiceCategory> ApplyFilters(IEnumerable<ServiceCategory> query, ServiceCategorySearchObject? searchObject)

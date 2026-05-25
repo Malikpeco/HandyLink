@@ -19,7 +19,7 @@ namespace HandyLink.Services.Database
         public DbSet<HandymanApplicationDocument> HandymanApplicationDocuments {  get; set; }
         public DbSet<HandymanApplicationPhoto> HandymanApplicationPhotos {  get; set; }
         public DbSet<HandymanApplicationReference> HandymanApplicationReferences {  get; set; }
-        public DbSet<HandymanApplicationServiceCategory> handymanApplicationServiceCategories {  get; set; }
+        public DbSet<HandymanApplicationServiceCategory> HandymanApplicationServiceCategories {  get; set; }
         public DbSet<HandymanProfile> HandymanProfiles {  get; set; }
         public DbSet<HandymanServiceCategory> HandymanServiceCategories {  get; set; }
         public DbSet<HandymanWorkPhoto> HandymanWorkPhotos {  get; set; }
