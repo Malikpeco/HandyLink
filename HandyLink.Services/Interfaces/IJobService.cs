@@ -11,6 +11,7 @@ namespace HandyLink.Services.Interfaces
     public interface IJobService
     {
         Task<JobDetailsResponse> CreateJobAsync(JobInsertRequest request);
+        Task<JobDetailsResponse> GetByIdAsync(int id);
 
     }
 }

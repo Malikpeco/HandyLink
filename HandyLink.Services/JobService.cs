@@ -2,6 +2,7 @@
 using HandyLink.Model.Database.Enums;
 using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Database.Entities;
 using HandyLink.Services.Exceptions;
@@ -101,6 +102,24 @@ namespace HandyLink.Services
             return _mapper.Map<JobDetailsResponse>(createdJob);
         }
 
+
+
+        public async Task<JobDetailsResponse> GetByIdAsync(int id)
+        {
+            var query = _dbContext.Jobs.AsQueryable();
+            query = IncludeRelatedEntitiesList(query);
+
+            var entity = await query.FirstOrDefaultAsync(e => e.Id == id);
+
+            if (entity == null)
+            {
+                throw new HandyLinkNotFoundException($"Job with id {id} not found.");
+            }
+
+            return await Task.FromResult(_mapper.Map<JobDetailsResponse>(entity));
+        }
+
+
         private async Task<Job> IncludeRelatedEntitiesAsync(Job entity)
         {
             return await _dbContext.Jobs
@@ -120,6 +139,27 @@ namespace HandyLink.Services
                 .Include(x => x.Review)
                 .FirstOrDefaultAsync(x => x.Id == entity.Id)
                 ?? throw new HandyLinkNotFoundException($"Job with id {entity.Id} not found.");
+        }
+
+        private IQueryable<Job> IncludeRelatedEntitiesList(IQueryable<Job> query)
+        {
+
+            return query
+                .Include(x => x.ClientProfile)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.HandymanProfile!)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.ServiceCategory)
+                .Include(x => x.City)
+                .Include(x => x.JobStatus)
+                .Include(x => x.JobProposals)
+                    .ThenInclude(x => x.ProposedByUser)
+                .Include(x => x.JobCompletionMarks)
+                    .ThenInclude(x => x.MarkedByUser)
+                .Include(x => x.JobCancellationMarks)
+                    .ThenInclude(x => x.MarkedByUser)
+                .Include(x => x.Review);
+
         }
 
     }

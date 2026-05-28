@@ -21,5 +21,12 @@ namespace HandyLink.WebApi.Controllers
         {
             return await _service.CreateJobAsync(request);
         }
+
+
+        [HttpGet("{id}")]
+        public async Task<JobDetailsResponse> GetById(int id)
+        {
+            return await _service.GetByIdAsync(id);
+        }
     }
 }
