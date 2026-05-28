@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Model.Responses
 {
-    public class ReviewListResponse
+    public class ReviewResponse
     {
         public int JobId { get; set; }
         public string JobTitle { get; set; } = string.Empty;
@@ -16,6 +16,6 @@ namespace HandyLink.Model.Responses
         public string HandymanFullName { get; set; } = string.Empty;
         public int Rating { get; set; }
         public string? Comment { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
     }
 }

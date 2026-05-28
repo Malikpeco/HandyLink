@@ -75,6 +75,12 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.ProfileImageBase64, src => src.User.ProfileImageBase64)
                 .Map(dest => dest.HandymanServiceCategories, src => src.HandymanServiceCategories);
 
+            TypeAdapterConfig<Review, ReviewResponse>
+                .NewConfig()
+                .Map(dest => dest.JobTitle, src => src.Job.Title)
+                .Map(dest => dest.ClientFullName, src => src.ClientProfile.User.FirstName + " " + src.ClientProfile.User.LastName)
+                .Map(dest => dest.HandymanFullName, src => src.HandymanProfile.User.FirstName + " " + src.HandymanProfile.User.LastName);
+
             TypeAdapterConfig<HandymanServiceCategory, HandymanServiceCategoryResponse>
                 .NewConfig()
                 .Map(dest => dest.ServiceCategoryId, src => src.ServiceCategoryId)
@@ -83,6 +89,7 @@ namespace HandyLink.Services.Mapping
             TypeAdapterConfig<HandymanProfileUpdateRequest, HandymanProfile>
                 .NewConfig()
                 .Ignore(dest => dest.HandymanWorkPhotos);
+            
             TypeAdapterConfig<ClientProfile, ClientProfileResponse>
                 .NewConfig()
                 .Map(dest => dest.User, src => src.User)
@@ -90,6 +97,30 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.ReviewsCount, src => src.Reviews.Count());
 
 
+            TypeAdapterConfig<Job, JobDetailsResponse>
+                .NewConfig()
+                .Map(dest => dest.ClientFullName, src => src.ClientProfile.User.FirstName + " " + src.ClientProfile.User.LastName)
+                .Map(dest => dest.HandymanFullName, src => src.HandymanProfile != null ? src.HandymanProfile.User.FirstName + " " + src.HandymanProfile.User.LastName : null)
+                .Map(dest => dest.ServiceCategoryName, src => src.ServiceCategory.Name)
+                .Map(dest => dest.CityName, src => src.City.Name)
+                .Map(dest => dest.JobCreationType, src => src.JobCreationType.ToString())
+                .Map(dest => dest.JobStatusName, src => src.JobStatus.Name);
+
+
+            TypeAdapterConfig<JobProposal, JobProposalResponse>
+                .NewConfig()
+                .Map(dest => dest.JobTitle, src => src.Job.Title)
+                .Map(dest => dest.ProposedByUserFullName, src => src.ProposedByUser.FirstName + " " + src.ProposedByUser.LastName);
+            
+            TypeAdapterConfig<JobCompletionMark, JobCompletionMarkResponse>
+                .NewConfig()
+                .Map(dest => dest.JobTitle, src => src.Job.Title)
+                .Map(dest => dest.MarkedByUserFullName, src => src.MarkedByUser.FirstName + " " + src.MarkedByUser.LastName);
+            
+            TypeAdapterConfig<JobCancellationMark, JobCancellationMarkResponse>
+                .NewConfig()
+                .Map(dest => dest.JobTitle, src => src.Job.Title)
+                .Map(dest => dest.MarkedByUserFullName, src => src.MarkedByUser.FirstName + " " + src.MarkedByUser.LastName);
 
 
 

@@ -14,7 +14,7 @@ namespace HandyLink.Model.Responses
         public string Bio { get; set; } = string.Empty;
         public List<HandymanServiceCategoryResponse> HandymanServiceCategories { get; set; } = new();
         public List<HandymanWorkPhotoResponse> HandymanWorkPhotos { get; set; } = new();
-        public List<ReviewListResponse> Reviews { get; set; } = new();
+        public List<ReviewResponse> Reviews { get; set; } = new();
         public int ExperienceYears { get; set; }
         public int JobsCompleted { get; set; } //set in service
         public double AverageRating { get; set; }//set in service

@@ -42,8 +42,10 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IHandymanApplicationService, HandymanApplicationService>();
             builder.Services.AddScoped<IHandymanProfileService, HandymanProfileService>();
             builder.Services.AddScoped<IClientProfileService, ClientProfileService>();
+            builder.Services.AddScoped<IJobService, JobService>();
 
             builder.Services.AddScoped<IHashingService, HashingService>();
+
 
             builder.Services.AddScoped<IValidator<CountryInsertRequest>, CountryInsertValidator>();
             builder.Services.AddScoped<IValidator<CountryUpdateRequest>, CountryUpdateValidator>();
@@ -60,6 +62,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<HandymanApplicationInsertRequest>, HandymanApplicationInsertValidator>();
             builder.Services.AddScoped<IValidator<HandymanProfileInsertRequest>, HandymanProfileInsertValidator>();
             builder.Services.AddScoped<IValidator<HandymanProfileUpdateRequest>, HandymanProfileUpdateValidator>();
+            builder.Services.AddScoped<IValidator<JobInsertRequest>, JobInsertValidator>();
 
 
             builder.Services.AddEndpointsApiExplorer();

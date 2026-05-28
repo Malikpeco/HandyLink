@@ -31,7 +31,7 @@ namespace HandyLink.Services
 
 
 
-        public async Task<JobResponse> CreateJobAsync(JobInsertRequest request)
+        public async Task<JobDetailsResponse> CreateJobAsync(JobInsertRequest request)
         {
             var validationResult = await _insertValidator.ValidateAsync(request);
             if (validationResult.IsValid == false)
@@ -58,6 +58,12 @@ namespace HandyLink.Services
             
             if (request.HandymanProfileId != null && request.JobCreationType == JobCreationType.PublicRequest)
                 throw new HandyLinkBusinessRuleException($"Jobs with JobCreationType.PublicRequest cannot have a HandymanProfileId.");
+
+            if(request.JobCreationType == JobCreationType.DirectProposal && request.Address == null)
+                throw new HandyLinkBusinessRuleException($"Address is required for Jobs with JobCreationType.DirectProposal.");
+            if(request.JobCreationType == JobCreationType.PublicRequest && request.Address != null)
+                throw new HandyLinkBusinessRuleException($"Address must be empty for Jobs with JobCreationType.PublicRequest.");
+
 
             if (request.InitialPriceOnArrangement && request.InitialPrice != null)
                 throw new HandyLinkBusinessRuleException("InitialPrice must be empty when price is on arrangement.");
@@ -87,13 +93,34 @@ namespace HandyLink.Services
 
             entity.CurrentScheduledAtUtc = entity.InitialScheduledAtUtc;
 
+
             _dbContext.Jobs.Add(entity);
             await _dbContext.SaveChangesAsync();
 
-            return _mapper.Map<JobResponse>(entity);
+            var createdJob = await IncludeRelatedEntitiesAsync(entity);
+            return _mapper.Map<JobDetailsResponse>(createdJob);
         }
 
-
+        private async Task<Job> IncludeRelatedEntitiesAsync(Job entity)
+        {
+            return await _dbContext.Jobs
+                .Include(x => x.ClientProfile)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.HandymanProfile!)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.ServiceCategory)
+                .Include(x => x.City)
+                .Include(x => x.JobStatus)
+                .Include(x => x.JobProposals)
+                    .ThenInclude(x => x.ProposedByUser)
+                .Include(x => x.JobCompletionMarks)
+                    .ThenInclude(x => x.MarkedByUser)
+                .Include(x => x.JobCancellationMarks)
+                    .ThenInclude(x => x.MarkedByUser)
+                .Include(x => x.Review)
+                .FirstOrDefaultAsync(x => x.Id == entity.Id)
+                ?? throw new HandyLinkNotFoundException($"Job with id {entity.Id} not found.");
+        }
 
     }
 }

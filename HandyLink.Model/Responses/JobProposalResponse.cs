@@ -1,22 +1,24 @@
-﻿using HandyLink.Model.Database.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HandyLink.Services.Database.Entities 
+namespace HandyLink.Model.Responses
 {
-    public class JobProposal : BaseEntity
+    public class JobProposalResponse
     {
+        public int Id { get; set; } 
         public int JobId { get; set; }
-        public Job Job { get; set; } = null!;
+        public string JobTitle { get; set; } = string.Empty;
         public int ProposedByUserId { get; set; }
-        public User ProposedByUser { get; set; } = null!;
+        public string ProposedByUserFullName { get; set; } = string.Empty;
         public decimal? ProposedPrice { get; set; }
         public bool ProposedPriceOnArrangement { get; set; }
         public DateTime ProposedScheduledAtUtc { get; set; }
         public bool ProposedTimeFlexible { get; set; }
-        public JobProposalStatus JobProposalStatus { get; set; }
+        public string JobProposalStatus { get; set; } = string.Empty;
+        public DateTime CreatedAtUtc { get; set; }
+
     }
 }

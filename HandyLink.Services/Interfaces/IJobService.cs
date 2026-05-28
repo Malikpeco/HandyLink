@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HandyLink.Model.Requests;
+using HandyLink.Model.Responses;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +10,7 @@ namespace HandyLink.Services.Interfaces
 {
     public interface IJobService
     {
+        Task<JobDetailsResponse> CreateJobAsync(JobInsertRequest request);
 
     }
 }
