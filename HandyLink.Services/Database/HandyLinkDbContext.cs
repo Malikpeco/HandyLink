@@ -24,7 +24,7 @@ namespace HandyLink.Services.Database
         public DbSet<HandymanServiceCategory> HandymanServiceCategories {  get; set; }
         public DbSet<HandymanWorkPhoto> HandymanWorkPhotos {  get; set; }
         public DbSet<Job> Jobs {  get; set; }
-        public DbSet<JobCancellationMark> jobCancellationMarks {  get; set; }
+        public DbSet<JobCancellationMark> JobCancellationMarks {  get; set; }
         public DbSet<JobCompletionMark> JobCompletionMarks {  get; set; }
         public DbSet<JobProposal> JobProposals {  get; set; }
         public DbSet<JobStatus> JobStatuses {  get; set; }

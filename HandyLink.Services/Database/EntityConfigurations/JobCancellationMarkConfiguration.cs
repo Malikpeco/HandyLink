@@ -23,6 +23,9 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.HasOne(x => x.Job)
                 .WithMany(x => x.JobCancellationMarks)
                 .HasForeignKey(x => x.JobId);
+            builder.HasIndex(x => new { x.JobId, x.MarkedByUserId })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
         }
 
     }

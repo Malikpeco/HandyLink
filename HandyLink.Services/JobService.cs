@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,7 +40,7 @@ namespace HandyLink.Services
             {
                 throw new HandyLinkValidationException(validationResult.Errors);
             }
-            
+
 
             if (!await _dbContext.ClientProfiles.AnyAsync(x => x.Id == request.ClientProfileId))
                 throw new HandyLinkNotFoundException($"ClientProfile with id {request.ClientProfileId} not found.");
@@ -53,16 +54,16 @@ namespace HandyLink.Services
             if (!await _dbContext.Cities.AnyAsync(x => x.Id == request.CityId))
                 throw new HandyLinkNotFoundException($"City with id {request.CityId} not found.");
 
-            
+
             if (request.HandymanProfileId == null && request.JobCreationType == JobCreationType.DirectProposal)
                 throw new HandyLinkBusinessRuleException($"Jobs with JobCreationType.DirectProposal must have a HandymanProfileId.");
-            
+
             if (request.HandymanProfileId != null && request.JobCreationType == JobCreationType.PublicRequest)
                 throw new HandyLinkBusinessRuleException($"Jobs with JobCreationType.PublicRequest cannot have a HandymanProfileId.");
 
-            if(request.JobCreationType == JobCreationType.DirectProposal && request.Address == null)
+            if (request.JobCreationType == JobCreationType.DirectProposal && request.Address == null)
                 throw new HandyLinkBusinessRuleException($"Address is required for Jobs with JobCreationType.DirectProposal.");
-            if(request.JobCreationType == JobCreationType.PublicRequest && request.Address != null)
+            if (request.JobCreationType == JobCreationType.PublicRequest && request.Address != null)
                 throw new HandyLinkBusinessRuleException($"Address must be empty for Jobs with JobCreationType.PublicRequest.");
 
 
@@ -79,17 +80,17 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException("JobStatus 'PENDING' not found, it must exist.");
 
             entity.JobStatusId = pendingStatus.Id;
-            
+
             entity.CurrentPrice = request.InitialPrice;
-            entity.CurrentPriceOnArrangement=request.InitialPriceOnArrangement;
+            entity.CurrentPriceOnArrangement = request.InitialPriceOnArrangement;
 
             if (request.InitialScheduledAtUtc == default)
                 throw new HandyLinkBusinessRuleException("InitalScheduledAt is required.");
 
             entity.CurrentTimeFlexible = request.InitialTimeFlexible;
 
-            entity.InitialScheduledAtUtc = request.InitialTimeFlexible 
-                ? request.InitialScheduledAtUtc.Date 
+            entity.InitialScheduledAtUtc = request.InitialTimeFlexible
+                ? request.InitialScheduledAtUtc.Date
                 : request.InitialScheduledAtUtc;
 
             entity.CurrentScheduledAtUtc = entity.InitialScheduledAtUtc;
@@ -118,6 +119,130 @@ namespace HandyLink.Services
 
             return await Task.FromResult(_mapper.Map<JobDetailsResponse>(entity));
         }
+
+
+        public async Task<JobDetailsResponse> AddCompletionMarkAsync(JobMarkRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (job.JobStatus.Code != "CONFIRMED")
+                throw new HandyLinkBusinessRuleException($"JobStatus must be CONFIRMED for a completed-mark to be added.");
+
+            if (job.HandymanProfileId == null || job.HandymanProfile==null)
+                throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.MarkedByUserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.MarkedByUserId} not found.");
+
+            var clientUserId = job.ClientProfile.UserId;
+            var handymanUserId = job.HandymanProfile.UserId;
+
+            if (request.MarkedByUserId != clientUserId && request.MarkedByUserId != handymanUserId)
+                throw new HandyLinkForbiddenException("Only the client or the assigned handyman can mark this job as completed.");
+
+            if (job.JobCompletionMarks.Any(x => x.MarkedByUserId == request.MarkedByUserId))
+                throw new HandyLinkBusinessRuleException("User already marked this job as completed.");
+
+            var existingCancellationMark = job.JobCancellationMarks.FirstOrDefault(x=>x.MarkedByUserId==request.MarkedByUserId);
+            if (existingCancellationMark != null)
+            {
+                _dbContext.JobCancellationMarks.Remove(existingCancellationMark);
+                job.JobCancellationMarks.Remove(existingCancellationMark);
+            } 
+                
+            job.JobCompletionMarks.Add(new JobCompletionMark
+            {
+                JobId = request.JobId,
+                MarkedByUserId = request.MarkedByUserId
+            });
+
+            var hasClientMark = job.JobCompletionMarks.Any(x => x.MarkedByUserId == clientUserId);
+            var hasHandymanMark = job.JobCompletionMarks.Any(x => x.MarkedByUserId == handymanUserId);
+            if(hasClientMark && hasHandymanMark)
+            {
+                var completedStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync(x => x.Code == "COMPLETED");
+
+                if (completedStatus == null)
+                    throw new HandyLinkNotFoundException("Job status COMPLETED does not exist.");
+
+                job.JobStatusId = completedStatus.Id;
+                job.JobStatus = completedStatus;
+                job.CompletedAtUtc = DateTime.UtcNow;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return _mapper.Map<JobDetailsResponse>(job);
+
+        }
+
+
+
+        public async Task<JobDetailsResponse> AddCancellationMarkAsync(JobMarkRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (job.JobStatus.Code != "CONFIRMED")
+                throw new HandyLinkBusinessRuleException($"JobStatus must be CONFIRMED for a cancelled-mark to be added.");
+
+            if (job.HandymanProfileId == null || job.HandymanProfile == null)
+                throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.MarkedByUserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.MarkedByUserId} not found.");
+
+            var clientUserId = job.ClientProfile.UserId;
+            var handymanUserId = job.HandymanProfile.UserId;
+
+            if (request.MarkedByUserId != clientUserId && request.MarkedByUserId != handymanUserId)
+                throw new HandyLinkForbiddenException("Only the client or the assigned handyman can mark this job as cancelled.");
+
+            if (job.JobCancellationMarks.Any(x => x.MarkedByUserId == request.MarkedByUserId))
+                throw new HandyLinkBusinessRuleException("User already marked this job as cancelled.");
+
+            var existingCompletionMark = job.JobCompletionMarks.FirstOrDefault(x => x.MarkedByUserId == request.MarkedByUserId);
+            if (existingCompletionMark != null)
+            {
+                _dbContext.JobCompletionMarks.Remove(existingCompletionMark);
+                job.JobCompletionMarks.Remove(existingCompletionMark);
+            }
+
+            job.JobCancellationMarks.Add(new JobCancellationMark
+            {
+                JobId = request.JobId,
+                MarkedByUserId = request.MarkedByUserId
+            });
+
+            var hasClientMark = job.JobCancellationMarks.Any(x => x.MarkedByUserId == clientUserId);
+            var hasHandymanMark = job.JobCancellationMarks.Any(x => x.MarkedByUserId == handymanUserId);
+            if (hasClientMark && hasHandymanMark)
+            {
+                var cancelledStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync(x => x.Code == "CANCELLED");
+
+                if (cancelledStatus == null)
+                    throw new HandyLinkNotFoundException("Job status CANCELLED does not exist.");
+
+                job.JobStatusId = cancelledStatus.Id;
+                job.JobStatus = cancelledStatus;
+                job.CancelledAtUtc = DateTime.UtcNow;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return _mapper.Map<JobDetailsResponse>(job);
+
+        }
+
 
 
         private async Task<Job> IncludeRelatedEntitiesAsync(Job entity)

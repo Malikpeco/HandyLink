@@ -28,5 +28,17 @@ namespace HandyLink.WebApi.Controllers
         {
             return await _service.GetByIdAsync(id);
         }
+
+        [HttpPost("completion-mark")]
+        public async Task<JobDetailsResponse> MarkAsCompleted([FromBody] JobMarkRequest request)
+        {
+            return await _service.AddCompletionMarkAsync(request);
+        }
+
+        [HttpPost("cancellation-mark")]
+        public async Task<JobDetailsResponse> MarkAsCancelled([FromBody] JobMarkRequest request)
+        {
+            return await _service.AddCancellationMarkAsync(request);
+        }
     }
 }
