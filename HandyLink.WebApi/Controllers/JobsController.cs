@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Services;
 using HandyLink.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,6 +30,12 @@ namespace HandyLink.WebApi.Controllers
             return await _service.GetByIdAsync(id);
         }
 
+        [HttpPost("accept")]
+        public async Task<JobDetailsResponse> AcceptJob(JobAcceptRequest request)
+        {
+            return await _service.AcceptJobAsync(request);
+        }
+
         [HttpPost("completion-mark")]
         public async Task<JobDetailsResponse> MarkAsCompleted([FromBody] JobMarkRequest request)
         {
@@ -40,5 +47,7 @@ namespace HandyLink.WebApi.Controllers
         {
             return await _service.AddCancellationMarkAsync(request);
         }
+
+
     }
 }

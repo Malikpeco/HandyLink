@@ -245,6 +245,44 @@ namespace HandyLink.Services
 
 
 
+        public async Task<JobDetailsResponse> AcceptJobAsync(JobAcceptRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            var handyman = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x=>x.Id== request.HandymanProfileId);
+            if (handyman == null)
+                throw new HandyLinkNotFoundException($"HandymanProfile with id {request.HandymanProfileId} not found.");
+
+
+            if (job.JobStatus.Code != "PENDING")
+                throw new HandyLinkBusinessRuleException("Only PENDING jobs can be accepted.");
+
+            if (job.JobCreationType == JobCreationType.DirectProposal)
+            {
+                if (job.HandymanProfileId != request.HandymanProfileId)
+                    throw new HandyLinkBusinessRuleException($"This job is assigned to another handyman.");
+            }
+
+            var confirmedStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync( x => x.Code=="CONFIRMED");
+            if (confirmedStatus == null)
+                throw new HandyLinkNotFoundException("Job status CONFIRMED does not exist.");
+
+            job.HandymanProfileId = request.HandymanProfileId;
+            job.JobStatusId = confirmedStatus.Id;
+
+            await _dbContext.SaveChangesAsync();
+            return _mapper.Map<JobDetailsResponse>(job);
+        }
+
+
+
+
+
+
+
         private async Task<Job> IncludeRelatedEntitiesAsync(Job entity)
         {
             return await _dbContext.Jobs
