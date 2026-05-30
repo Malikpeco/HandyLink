@@ -110,7 +110,7 @@ namespace HandyLink.Services
             return query
                 .Include(x => x.User).ThenInclude(x => x.City)
                 .Include(x=>x.Reviews)
-                .Include(x=>x.Jobs)
+                .Include(x=>x.Jobs).ThenInclude(x => x.JobStatus)
                 .Include(x => x.User).ThenInclude(x => x.UserStatus);
 
             

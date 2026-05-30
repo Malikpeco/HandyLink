@@ -42,6 +42,13 @@ namespace HandyLink.WebApi.Controllers
             return await _service.DeclineJobAsync(request);
         }
 
+        [HttpPost("{id}/suggest-changes")]
+        public async Task<JobProposalResponse> SuggestChanges(int id, [FromBody] JobProposalInsertRequest request)
+        {
+            
+            return await _service.SuggestChangesAsync(id, request);
+        }
+
         [HttpPost("completion-mark")]
         public async Task<JobDetailsResponse> MarkAsCompleted([FromBody] JobMarkRequest request)
         {

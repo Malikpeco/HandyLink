@@ -63,6 +63,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<HandymanProfileInsertRequest>, HandymanProfileInsertValidator>();
             builder.Services.AddScoped<IValidator<HandymanProfileUpdateRequest>, HandymanProfileUpdateValidator>();
             builder.Services.AddScoped<IValidator<JobInsertRequest>, JobInsertValidator>();
+            builder.Services.AddScoped<IValidator<JobProposalInsertRequest>, JobProposalInsertValidator>();
 
 
             builder.Services.AddEndpointsApiExplorer();

@@ -23,12 +23,14 @@ namespace HandyLink.Services
         private readonly HandyLinkDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly IValidator<JobInsertRequest> _insertValidator;
+        private readonly IValidator<JobProposalInsertRequest> _proposalInsertValidator;
 
-        public JobService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<JobInsertRequest> insertValidator)
+        public JobService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<JobInsertRequest> insertValidator, IValidator<JobProposalInsertRequest> proposalInsertValidator)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _insertValidator = insertValidator;
+            _proposalInsertValidator = proposalInsertValidator;
         }
 
 
@@ -310,6 +312,71 @@ namespace HandyLink.Services
         }
 
 
+        public async Task<JobProposalResponse> SuggestChangesAsync(int id, JobProposalInsertRequest request)
+        {
+            var validationResult = await _proposalInsertValidator.ValidateAsync(request);
+            if (validationResult.IsValid == false)
+            {
+                throw new HandyLinkValidationException(validationResult.Errors);
+            }
+
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == id);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {id} not found.");
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (job.JobStatus.Code != "PENDING")
+                throw new HandyLinkBusinessRuleException("Job must be PENDING for changes to be suggested.");
+
+            if (job.JobProposals.Any(x => x.JobProposalStatus == JobProposalStatus.Pending))
+                throw new HandyLinkBusinessRuleException("Job already has a proposal.");
+
+            if (job.HandymanProfileId == null || job.HandymanProfile == null)
+                throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile assigned for changes to be suggested.");
+            
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.ProposedByUserId);
+            if(user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.ProposedByUserId} not found.");
+            
+            if (request.ProposedByUserId != job.HandymanProfile.UserId && request.ProposedByUserId != job.ClientProfile.UserId)
+                throw new HandyLinkBusinessRuleException("User suggesting changes must be either the handyman or client that this job is assigned to.");
+
+            if(job.JobProposals.Count==0)
+            {
+                //if this is gonna be the firs proposal/suggested change, it MUST be from the handyman of the job, NOT by the client, since the client is the one who CREATED the job aka sent the initial job proposal.
+                if (request.ProposedByUserId != job.HandymanProfile.UserId)
+                    throw new HandyLinkBusinessRuleException("The first suggested changes in a job MUST come from the handyman.");
+            }
+
+            if (request.ProposedPriceOnArrangement && request.ProposedPrice != null)
+            {
+                throw new HandyLinkBusinessRuleException("ProposedPrice must be empty if ProposedPriceOnArrangement is true.");
+            }
+            if (!request.ProposedPriceOnArrangement && request.ProposedPrice == null)
+            {
+                throw new HandyLinkBusinessRuleException("ProposedPrice is required if ProposedPriceOnArrangement is false.");
+            }
+
+            if (request.ProposedScheduledAtUtc == default)
+                throw new HandyLinkBusinessRuleException("ProposedScheduledAt is required.");
+
+
+            var proposal = _mapper.Map<JobProposal>(request);
+            proposal.JobId = job.Id;
+            proposal.Job = job;
+            proposal.ProposedByUser = user;
+            proposal.JobProposalStatus = JobProposalStatus.Pending;
+            
+
+            proposal.ProposedScheduledAtUtc = request.ProposedTimeFlexible ? request.ProposedScheduledAtUtc.Date : request.ProposedScheduledAtUtc;
+
+
+            _dbContext.JobProposals.Add(proposal);
+            await _dbContext.SaveChangesAsync();
+
+            return _mapper.Map<JobProposalResponse>(proposal);
+        }
 
 
 
