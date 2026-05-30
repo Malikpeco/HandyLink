@@ -278,6 +278,36 @@ namespace HandyLink.Services
         }
 
 
+        public async Task<JobDetailsResponse> DeclineJobAsync(JobDeclineRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            var handyman = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
+            if (handyman == null)
+                throw new HandyLinkNotFoundException($"HandymanProfile with id {request.HandymanProfileId} not found.");
+
+            if (job.JobCreationType != JobCreationType.DirectProposal)
+                throw new HandyLinkBusinessRuleException("Only DirectProposal jobs can be declined.");
+
+            if (job.JobStatus.Code != "PENDING")
+                throw new HandyLinkBusinessRuleException("Only PENDING jobs can be declined.");
+
+            if (job.HandymanProfileId != request.HandymanProfileId)
+                throw new HandyLinkBusinessRuleException($"This job is assigned to another handyman.");
+
+            var cancelledStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync(x => x.Code == "CANCELLED");
+            if (cancelledStatus == null)
+                throw new HandyLinkNotFoundException("Job status CANCELLED does not exist.");
+
+            job.HandymanProfileId = request.HandymanProfileId;
+            job.JobStatusId = cancelledStatus.Id;
+
+            await _dbContext.SaveChangesAsync();
+            return _mapper.Map<JobDetailsResponse>(job);
+        }
 
 
 

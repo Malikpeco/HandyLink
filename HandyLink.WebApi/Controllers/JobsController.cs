@@ -36,6 +36,12 @@ namespace HandyLink.WebApi.Controllers
             return await _service.AcceptJobAsync(request);
         }
 
+        [HttpPost("decline")]
+        public async Task<JobDetailsResponse> DeclineJob(JobDeclineRequest request)
+        {
+            return await _service.DeclineJobAsync(request);
+        }
+
         [HttpPost("completion-mark")]
         public async Task<JobDetailsResponse> MarkAsCompleted([FromBody] JobMarkRequest request)
         {
