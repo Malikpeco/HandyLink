@@ -18,6 +18,7 @@ namespace HandyLink.Model.Responses
         public DateTime ProposedScheduledAtUtc { get; set; }
         public bool ProposedTimeFlexible { get; set; }
         public string JobProposalStatus { get; set; } = string.Empty;
+        public string? Note { get; set; }
         public DateTime CreatedAtUtc { get; set; }
 
     }

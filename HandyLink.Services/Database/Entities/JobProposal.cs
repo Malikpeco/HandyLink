@@ -17,6 +17,7 @@ namespace HandyLink.Services.Database.Entities
         public bool ProposedPriceOnArrangement { get; set; }
         public DateTime ProposedScheduledAtUtc { get; set; }
         public bool ProposedTimeFlexible { get; set; }
+        public string? Note { get; set; } 
         public JobProposalStatus JobProposalStatus { get; set; }
     }
 }

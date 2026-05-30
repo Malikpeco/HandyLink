@@ -21,6 +21,7 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.Property(x => x.ProposedScheduledAtUtc).IsRequired();
             builder.Property(x => x.ProposedTimeFlexible).IsRequired();
             builder.Property(x => x.JobProposalStatus).IsRequired();
+            builder.Property(x => x.Note).HasMaxLength(2000);
 
 
             builder.HasOne(x => x.Job)
