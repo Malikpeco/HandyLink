@@ -30,16 +30,16 @@ namespace HandyLink.WebApi.Controllers
             return await _service.GetByIdAsync(id);
         }
 
-        [HttpPost("accept")]
-        public async Task<JobDetailsResponse> AcceptJob(AcceptDirectProposalRequest request)
+        [HttpPost("instant-accept-direct-proposal")]
+        public async Task<JobDetailsResponse> InstantAcceptDirectProposal(InstantAcceptDirectProposalRequest request)
         {
-            return await _service.AcceptDirectProposalAsync(request);
+            return await _service.InstantAcceptDirectProposalAsync(request);
         }
 
-        [HttpPost("decline")]
-        public async Task<JobDetailsResponse> DeclineJob(DeclineDirectProposalRequest request)
+        [HttpPost("instant-decline-direct-proposal")]
+        public async Task<JobDetailsResponse> InstantDeclineDirectProposal(InstantDeclineDirectProposalRequest request)
         {
-            return await _service.DeclineDirectProposalAsync(request);
+            return await _service.InstantDeclineDirectProposalAsync(request);
         }
 
         [HttpPost("{id}/suggest-changes")]
@@ -62,5 +62,11 @@ namespace HandyLink.WebApi.Controllers
         }
 
 
+        [HttpPost("accept-suggested-changes")]
+        public async Task<JobDetailsResponse> AcceptSuggestedChanges(
+        [FromBody] JobProposalDecisionRequest request)
+        {
+            return await _service.AcceptSuggestedChangesAsync(request);
+        }
     }
 }

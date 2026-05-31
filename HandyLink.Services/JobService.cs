@@ -9,6 +9,7 @@ using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -247,7 +248,7 @@ namespace HandyLink.Services
 
 
 
-        public async Task<JobDetailsResponse> AcceptDirectProposalAsync(AcceptDirectProposalRequest request)
+        public async Task<JobDetailsResponse> InstantAcceptDirectProposalAsync(InstantAcceptDirectProposalRequest request)
         {
             var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
             if (job == null)
@@ -273,13 +274,14 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException("Job status CONFIRMED does not exist.");
 
             job.JobStatusId = confirmedStatus.Id;
+            job.ConfirmedAtUtc = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
             return _mapper.Map<JobDetailsResponse>(job);
         }
 
 
-        public async Task<JobDetailsResponse> DeclineDirectProposalAsync(DeclineDirectProposalRequest request)
+        public async Task<JobDetailsResponse> InstantDeclineDirectProposalAsync(InstantDeclineDirectProposalRequest request)
         {
             var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
             if (job == null)
@@ -304,6 +306,7 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException("Job status CANCELLED does not exist.");
 
             job.JobStatusId = cancelledStatus.Id;
+            job.CancelledAtUtc = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
             return _mapper.Map<JobDetailsResponse>(job);
@@ -391,10 +394,6 @@ namespace HandyLink.Services
 
                 if (request.ProposedByUserId == job.ClientProfile.UserId)
                 {
-                    if (request.HandymanProfileId == null)
-                        throw new HandyLinkBusinessRuleException(
-                            "HandymanProfileId is required when the client suggests changes on a public request.");
-
                     var handyman = await _dbContext.HandymanProfiles
                         .FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
 
@@ -410,7 +409,7 @@ namespace HandyLink.Services
                     if (handyman == null)
                         throw new HandyLinkForbiddenException("ProposedByUserId is not an existing UserId of a HandymanProfile.");
 
-                    if (request.HandymanProfileId != null && request.HandymanProfileId != handyman.Id)
+                    if (request.HandymanProfileId != handyman.Id)
                         throw new HandyLinkBusinessRuleException("HandymanProfileId does not match the proposing handyman.");
 
                     proposalHandymanProfileId = handyman.Id;
@@ -444,8 +443,6 @@ namespace HandyLink.Services
 
 
 
-
-
             var proposal = _mapper.Map<JobProposal>(request);
             proposal.JobId = job.Id;
             proposal.Job = job;
@@ -466,6 +463,114 @@ namespace HandyLink.Services
 
             return _mapper.Map<JobProposalResponse>(proposal);
         }
+
+
+
+
+
+
+
+
+
+        public async Task<JobDetailsResponse> AcceptSuggestedChangesAsync(JobProposalDecisionRequest request)
+        {
+            var proposal = await _dbContext.JobProposals.FirstOrDefaultAsync(x => x.Id == request.JobProposalId);
+            if (proposal == null)
+                throw new HandyLinkNotFoundException($"JobProposal with id {request.JobProposalId} not found.");
+            
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.UserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.UserId} not found.");
+
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == proposal.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"JobProposal is not assigned to a job.");
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (job.JobStatus.Code != "PENDING")
+                throw new HandyLinkBusinessRuleException("Job must be PENDING for suggested changes to be accepted.");
+
+            if (proposal.JobProposalStatus != JobProposalStatus.Pending)
+                throw new HandyLinkBusinessRuleException("Only pending job proposals can be accepted.");
+
+            if (proposal.ProposedByUserId == request.UserId)
+                throw new HandyLinkBusinessRuleException("User cannot accept his own suggested changes.");
+
+            var confirmedStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync(x => x.Code == "CONFIRMED");
+            if (confirmedStatus == null)
+                throw new HandyLinkNotFoundException("JobStatus CONFIRMED not found.");
+
+            
+            if (job.JobCreationType == JobCreationType.DirectProposal)
+            {
+                if (job.HandymanProfileId == null || job.HandymanProfile == null)
+                    throw new HandyLinkBusinessRuleException("DirectProposal jobs must have a HandymanProfile.");
+
+                var isClient = request.UserId == job.ClientProfile.UserId;
+                var isHandyman = request.UserId == job.HandymanProfile.UserId;
+
+                if (!isClient && !isHandyman)
+                    throw new HandyLinkForbiddenException("Only the client or assigned handyman can accept suggested changes.");
+            }
+
+            else if (job.JobCreationType == JobCreationType.PublicRequest)
+            {
+                if (job.HandymanProfileId != null)
+                    throw new HandyLinkBusinessRuleException("This public request already has a handyman assigned.");
+
+                var handyman = await _dbContext.HandymanProfiles
+                    .FirstOrDefaultAsync(x => x.Id == proposal.HandymanProfileId);
+
+                if (handyman == null)
+                    throw new HandyLinkNotFoundException($"HandymanProfile with id {proposal.HandymanProfileId} not found.");
+
+                var isClient = request.UserId == job.ClientProfile.UserId;
+                var isProposalHandyman = request.UserId == handyman.UserId;
+
+                if (!isClient && !isProposalHandyman)
+                    throw new HandyLinkForbiddenException("Only the client or proposing handyman can accept suggested changes.");
+
+                job.HandymanProfileId = proposal.HandymanProfileId;
+            }
+            else
+            {
+                throw new HandyLinkBusinessRuleException("Unsupported job creation type.");
+            }
+
+            job.CurrentPrice = proposal.ProposedPrice;
+            job.CurrentPriceOnArrangement = proposal.ProposedPriceOnArrangement;
+            job.CurrentScheduledAtUtc = proposal.ProposedScheduledAtUtc;
+            job.CurrentTimeFlexible = proposal.ProposedTimeFlexible;
+            job.JobStatusId = confirmedStatus.Id;
+            job.JobStatus = confirmedStatus;
+            job.ConfirmedAtUtc = DateTime.UtcNow;
+            
+            proposal.JobProposalStatus = JobProposalStatus.Accepted;
+
+            if (job.JobCreationType == JobCreationType.PublicRequest)
+            {
+                foreach (var otherProposal in job.JobProposals
+                    .Where(x => x.Id != proposal.Id && x.JobProposalStatus == JobProposalStatus.Pending))
+                {
+                    otherProposal.JobProposalStatus = JobProposalStatus.Cancelled;
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            return _mapper.Map<JobDetailsResponse>(job);
+
+
+        }
+
+
+
+
+
+
 
 
 

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Model.Requests
 {
-    public class DeclineDirectProposalRequest
+    public class JobProposalDecisionRequest
     {
-        public int JobId { get; set; }
-        public int HandymanProfileId { get; set; }
+        public int UserId { get; set; }
+        public int JobProposalId { get; set; }
     }
 }
