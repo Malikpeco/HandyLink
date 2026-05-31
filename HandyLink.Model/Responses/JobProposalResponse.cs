@@ -13,6 +13,8 @@ namespace HandyLink.Model.Responses
         public string JobTitle { get; set; } = string.Empty;
         public int ProposedByUserId { get; set; }
         public string ProposedByUserFullName { get; set; } = string.Empty;
+        public int HandymanProfileId { get; set; }
+        public string HandymanFullname { get; set; } = string.Empty;
         public decimal? ProposedPrice { get; set; }
         public bool ProposedPriceOnArrangement { get; set; }
         public DateTime ProposedScheduledAtUtc { get; set; }

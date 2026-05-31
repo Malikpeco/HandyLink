@@ -31,15 +31,15 @@ namespace HandyLink.WebApi.Controllers
         }
 
         [HttpPost("accept")]
-        public async Task<JobDetailsResponse> AcceptJob(JobAcceptRequest request)
+        public async Task<JobDetailsResponse> AcceptJob(AcceptDirectProposalRequest request)
         {
-            return await _service.AcceptJobAsync(request);
+            return await _service.AcceptDirectProposalAsync(request);
         }
 
         [HttpPost("decline")]
-        public async Task<JobDetailsResponse> DeclineJob(JobDeclineRequest request)
+        public async Task<JobDetailsResponse> DeclineJob(DeclineDirectProposalRequest request)
         {
-            return await _service.DeclineJobAsync(request);
+            return await _service.DeclineDirectProposalAsync(request);
         }
 
         [HttpPost("{id}/suggest-changes")]

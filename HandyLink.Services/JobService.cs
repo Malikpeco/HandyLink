@@ -134,7 +134,7 @@ namespace HandyLink.Services
             if (job.JobStatus.Code != "CONFIRMED")
                 throw new HandyLinkBusinessRuleException($"JobStatus must be CONFIRMED for a completed-mark to be added.");
 
-            if (job.HandymanProfileId == null || job.HandymanProfile==null)
+            if (job.HandymanProfileId == null || job.HandymanProfile == null)
                 throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile.");
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.MarkedByUserId);
@@ -150,13 +150,13 @@ namespace HandyLink.Services
             if (job.JobCompletionMarks.Any(x => x.MarkedByUserId == request.MarkedByUserId))
                 throw new HandyLinkBusinessRuleException("User already marked this job as completed.");
 
-            var existingCancellationMark = job.JobCancellationMarks.FirstOrDefault(x=>x.MarkedByUserId==request.MarkedByUserId);
+            var existingCancellationMark = job.JobCancellationMarks.FirstOrDefault(x => x.MarkedByUserId == request.MarkedByUserId);
             if (existingCancellationMark != null)
             {
                 _dbContext.JobCancellationMarks.Remove(existingCancellationMark);
                 job.JobCancellationMarks.Remove(existingCancellationMark);
-            } 
-                
+            }
+
             job.JobCompletionMarks.Add(new JobCompletionMark
             {
                 JobId = request.JobId,
@@ -165,7 +165,7 @@ namespace HandyLink.Services
 
             var hasClientMark = job.JobCompletionMarks.Any(x => x.MarkedByUserId == clientUserId);
             var hasHandymanMark = job.JobCompletionMarks.Any(x => x.MarkedByUserId == handymanUserId);
-            if(hasClientMark && hasHandymanMark)
+            if (hasClientMark && hasHandymanMark)
             {
                 var completedStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync(x => x.Code == "COMPLETED");
 
@@ -247,32 +247,31 @@ namespace HandyLink.Services
 
 
 
-        public async Task<JobDetailsResponse> AcceptJobAsync(JobAcceptRequest request)
+        public async Task<JobDetailsResponse> AcceptDirectProposalAsync(AcceptDirectProposalRequest request)
         {
             var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
             if (job == null)
                 throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
             job = await IncludeRelatedEntitiesAsync(job);
 
-            var handyman = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x=>x.Id== request.HandymanProfileId);
+            var handyman = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
             if (handyman == null)
                 throw new HandyLinkNotFoundException($"HandymanProfile with id {request.HandymanProfileId} not found.");
 
 
+            if (job.JobCreationType != JobCreationType.DirectProposal)
+                throw new HandyLinkBusinessRuleException("Only DirectProposal jobs can be accepted directly.");
+
             if (job.JobStatus.Code != "PENDING")
                 throw new HandyLinkBusinessRuleException("Only PENDING jobs can be accepted.");
 
-            if (job.JobCreationType == JobCreationType.DirectProposal)
-            {
-                if (job.HandymanProfileId != request.HandymanProfileId)
-                    throw new HandyLinkBusinessRuleException($"This job is assigned to another handyman.");
-            }
+            if (job.HandymanProfileId != request.HandymanProfileId)
+                throw new HandyLinkBusinessRuleException($"This job is assigned to another handyman.");
 
-            var confirmedStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync( x => x.Code=="CONFIRMED");
+            var confirmedStatus = await _dbContext.JobStatuses.FirstOrDefaultAsync(x => x.Code == "CONFIRMED");
             if (confirmedStatus == null)
                 throw new HandyLinkNotFoundException("Job status CONFIRMED does not exist.");
 
-            job.HandymanProfileId = request.HandymanProfileId;
             job.JobStatusId = confirmedStatus.Id;
 
             await _dbContext.SaveChangesAsync();
@@ -280,7 +279,7 @@ namespace HandyLink.Services
         }
 
 
-        public async Task<JobDetailsResponse> DeclineJobAsync(JobDeclineRequest request)
+        public async Task<JobDetailsResponse> DeclineDirectProposalAsync(DeclineDirectProposalRequest request)
         {
             var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
             if (job == null)
@@ -292,7 +291,7 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException($"HandymanProfile with id {request.HandymanProfileId} not found.");
 
             if (job.JobCreationType != JobCreationType.DirectProposal)
-                throw new HandyLinkBusinessRuleException("Only DirectProposal jobs can be declined.");
+                throw new HandyLinkBusinessRuleException("Only DirectProposal jobs can be declined immediately.");
 
             if (job.JobStatus.Code != "PENDING")
                 throw new HandyLinkBusinessRuleException("Only PENDING jobs can be declined.");
@@ -304,12 +303,13 @@ namespace HandyLink.Services
             if (cancelledStatus == null)
                 throw new HandyLinkNotFoundException("Job status CANCELLED does not exist.");
 
-            job.HandymanProfileId = request.HandymanProfileId;
             job.JobStatusId = cancelledStatus.Id;
 
             await _dbContext.SaveChangesAsync();
             return _mapper.Map<JobDetailsResponse>(job);
         }
+
+
 
 
         public async Task<JobProposalResponse> SuggestChangesAsync(int id, JobProposalInsertRequest request)
@@ -327,27 +327,13 @@ namespace HandyLink.Services
 
             if (job.JobStatus.Code != "PENDING")
                 throw new HandyLinkBusinessRuleException("Job must be PENDING for changes to be suggested.");
-
-            if (job.JobProposals.Any(x => x.JobProposalStatus == JobProposalStatus.Pending))
-                throw new HandyLinkBusinessRuleException("Job already has a proposal.");
-
-            if (job.HandymanProfileId == null || job.HandymanProfile == null)
-                throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile assigned for changes to be suggested.");
             
+            if (job.ClientProfile == null)
+                throw new HandyLinkBusinessRuleException("Job must have a ClientProfile.");
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.ProposedByUserId);
-            if(user == null)
+            if (user == null)
                 throw new HandyLinkNotFoundException($"User with id {request.ProposedByUserId} not found.");
-            
-            if (request.ProposedByUserId != job.HandymanProfile.UserId && request.ProposedByUserId != job.ClientProfile.UserId)
-                throw new HandyLinkBusinessRuleException("User suggesting changes must be either the handyman or client that this job is assigned to.");
-
-            if(job.JobProposals.Count==0)
-            {
-                //if this is gonna be the firs proposal/suggested change, it MUST be from the handyman of the job, NOT by the client, since the client is the one who CREATED the job aka sent the initial job proposal.
-                if (request.ProposedByUserId != job.HandymanProfile.UserId)
-                    throw new HandyLinkBusinessRuleException("The first suggested changes in a job MUST come from the handyman.");
-            }
 
             if (request.ProposedPriceOnArrangement && request.ProposedPrice != null)
             {
@@ -362,12 +348,115 @@ namespace HandyLink.Services
                 throw new HandyLinkBusinessRuleException("ProposedScheduledAt is required.");
 
 
+
+
+            int proposalHandymanProfileId;
+
+            if (job.JobCreationType == JobCreationType.DirectProposal)
+            {
+                if (job.HandymanProfileId == null || job.HandymanProfile == null)
+                    throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile assigned for changes to be suggested.");
+                
+                if (request.ProposedByUserId != job.HandymanProfile.UserId && request.ProposedByUserId != job.ClientProfile.UserId)
+                    throw new HandyLinkBusinessRuleException("User suggesting changes must be either the assigned handyman or the client.");
+
+                proposalHandymanProfileId = job.HandymanProfileId.Value;
+                
+
+                var pendingProposal = job.JobProposals.FirstOrDefault(x=>x.JobProposalStatus == JobProposalStatus.Pending);
+                if (pendingProposal == null)
+                {
+                    if (job.JobProposals.Count == 0 && request.ProposedByUserId != job.HandymanProfile.UserId)
+                    {
+                        throw new HandyLinkBusinessRuleException("The first suggested changes in a job MUST come from the handyman.");
+                    }
+                }
+                else
+                {
+                    if (pendingProposal.ProposedByUserId == request.ProposedByUserId)
+                        throw new HandyLinkBusinessRuleException("The same user cannot suggest changes twice in a row.");
+
+                    pendingProposal.JobProposalStatus = JobProposalStatus.Superceded;
+                }
+
+            }
+
+
+            else if(job.JobCreationType==JobCreationType.PublicRequest)
+            {
+                if (job.HandymanProfileId != null)
+                {
+                    throw new HandyLinkBusinessRuleException("This PublicRequest already has a handyman assigned.");
+                }
+
+                if (request.ProposedByUserId == job.ClientProfile.UserId)
+                {
+                    if (request.HandymanProfileId == null)
+                        throw new HandyLinkBusinessRuleException(
+                            "HandymanProfileId is required when the client suggests changes on a public request.");
+
+                    var handyman = await _dbContext.HandymanProfiles
+                        .FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
+
+                    if (handyman == null)
+                        throw new HandyLinkNotFoundException($"HandymanProfile with id {request.HandymanProfileId} not found.");
+
+                    proposalHandymanProfileId = handyman.Id;
+                }
+                else
+                {
+                    var handyman = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x => x.UserId == request.ProposedByUserId);
+
+                    if (handyman == null)
+                        throw new HandyLinkForbiddenException("ProposedByUserId is not an existing UserId of a HandymanProfile.");
+
+                    if (request.HandymanProfileId != null && request.HandymanProfileId != handyman.Id)
+                        throw new HandyLinkBusinessRuleException("HandymanProfileId does not match the proposing handyman.");
+
+                    proposalHandymanProfileId = handyman.Id;
+                }
+
+                var pendingProposal = job.JobProposals
+                    .FirstOrDefault(x =>
+                        x.HandymanProfileId == proposalHandymanProfileId &&
+                        x.JobProposalStatus == JobProposalStatus.Pending);
+
+                if (pendingProposal == null)
+                {
+                    if (request.ProposedByUserId == job.ClientProfile.UserId)
+                    {
+                        throw new HandyLinkBusinessRuleException("Client cannot suggest the first changes on a public request since he is the one who posted it.");
+                    }
+                }
+                else
+                {
+                    if (pendingProposal.ProposedByUserId == request.ProposedByUserId)
+                        throw new HandyLinkBusinessRuleException("The same user cannot suggest changes twice in a row.");
+
+                    pendingProposal.JobProposalStatus = JobProposalStatus.Superceded;
+                }
+            }
+            
+            else
+            {
+                throw new HandyLinkBusinessRuleException("Unsupported job creation type.");
+            }
+
+
+
+
+
             var proposal = _mapper.Map<JobProposal>(request);
             proposal.JobId = job.Id;
             proposal.Job = job;
-            proposal.ProposedByUser = user;
-            proposal.JobProposalStatus = JobProposalStatus.Pending;
             
+            proposal.ProposedByUserId = user.Id;
+            proposal.ProposedByUser = user;
+
+            proposal.HandymanProfileId = proposalHandymanProfileId;
+
+            proposal.JobProposalStatus = JobProposalStatus.Pending;
+
 
             proposal.ProposedScheduledAtUtc = request.ProposedTimeFlexible ? request.ProposedScheduledAtUtc.Date : request.ProposedScheduledAtUtc;
 
@@ -392,6 +481,9 @@ namespace HandyLink.Services
                 .Include(x => x.JobStatus)
                 .Include(x => x.JobProposals)
                     .ThenInclude(x => x.ProposedByUser)
+                .Include(x => x.JobProposals)
+                    .ThenInclude(x => x.HandymanProfile)
+                    .ThenInclude(x=>x.User)
                 .Include(x => x.JobCompletionMarks)
                     .ThenInclude(x => x.MarkedByUser)
                 .Include(x => x.JobCancellationMarks)
@@ -414,6 +506,9 @@ namespace HandyLink.Services
                 .Include(x => x.JobStatus)
                 .Include(x => x.JobProposals)
                     .ThenInclude(x => x.ProposedByUser)
+                .Include(x => x.JobProposals)
+                    .ThenInclude(x => x.HandymanProfile)
+                    .ThenInclude(x=>x.User)
                 .Include(x => x.JobCompletionMarks)
                     .ThenInclude(x => x.MarkedByUser)
                 .Include(x => x.JobCancellationMarks)

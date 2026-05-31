@@ -111,6 +111,7 @@ namespace HandyLink.Services.Mapping
                 .NewConfig()
                 .Map(dest => dest.JobTitle, src => src.Job.Title)
                 .Map(dest => dest.ProposedByUserFullName, src => src.ProposedByUser.FirstName + " " + src.ProposedByUser.LastName)
+                .Map(dest => dest.HandymanFullname, src => src.HandymanProfile.User.FirstName + " " + src.HandymanProfile.User.LastName)
                 .Map(dest => dest.JobProposalStatus, src => src.JobProposalStatus.ToString());
             
             TypeAdapterConfig<JobCompletionMark, JobCompletionMarkResponse>

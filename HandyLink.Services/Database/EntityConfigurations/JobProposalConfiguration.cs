@@ -31,6 +31,10 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.HasOne(x => x.ProposedByUser)
                 .WithMany(x => x.JobProposals)
                 .HasForeignKey(x => x.ProposedByUserId);
+
+            builder.HasOne(x => x.HandymanProfile)
+                .WithMany(x => x.JobProposals)
+                .HasForeignKey(x => x.HandymanProfileId).OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

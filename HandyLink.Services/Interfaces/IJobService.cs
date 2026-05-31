@@ -14,8 +14,8 @@ namespace HandyLink.Services.Interfaces
         Task<JobDetailsResponse> GetByIdAsync(int id);
         Task<JobDetailsResponse> AddCompletionMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> AddCancellationMarkAsync(JobMarkRequest request);
-        Task<JobDetailsResponse> AcceptJobAsync(JobAcceptRequest request);
-        Task<JobDetailsResponse> DeclineJobAsync(JobDeclineRequest request);
+        Task<JobDetailsResponse> AcceptDirectProposalAsync(AcceptDirectProposalRequest request);
+        Task<JobDetailsResponse> DeclineDirectProposalAsync(DeclineDirectProposalRequest request);
         Task<JobProposalResponse> SuggestChangesAsync(int id, JobProposalInsertRequest request);
 
 

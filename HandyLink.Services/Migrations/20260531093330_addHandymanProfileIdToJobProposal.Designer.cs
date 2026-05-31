@@ -4,6 +4,7 @@ using HandyLink.Services.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HandyLink.Services.Migrations
 {
     [DbContext(typeof(HandyLinkDbContext))]
-    partial class HandyLinkDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260531093330_addHandymanProfileIdToJobProposal")]
+    partial class addHandymanProfileIdToJobProposal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

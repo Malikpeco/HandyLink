@@ -15,6 +15,7 @@ namespace HandyLink.Services.Database.Entities
         public ICollection<HandymanServiceCategory> HandymanServiceCategories { get; set; } = new List <HandymanServiceCategory>();
         public ICollection<HandymanWorkPhoto> HandymanWorkPhotos { get; set; } = new List<HandymanWorkPhoto>();
         public ICollection<Job> Jobs { get; set; } = new List<Job>();
+        public ICollection<JobProposal> JobProposals { get; set; } = new List<JobProposal>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
 

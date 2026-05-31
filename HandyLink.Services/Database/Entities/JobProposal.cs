@@ -13,6 +13,8 @@ namespace HandyLink.Services.Database.Entities
         public Job Job { get; set; } = null!;
         public int ProposedByUserId { get; set; }
         public User ProposedByUser { get; set; } = null!;
+        public int HandymanProfileId { get; set; }
+        public HandymanProfile HandymanProfile { get; set; } = null!;
         public decimal? ProposedPrice { get; set; }
         public bool ProposedPriceOnArrangement { get; set; }
         public DateTime ProposedScheduledAtUtc { get; set; }
