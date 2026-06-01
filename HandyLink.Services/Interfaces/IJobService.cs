@@ -14,13 +14,14 @@ namespace HandyLink.Services.Interfaces
         Task<JobDetailsResponse> GetByIdAsync(int id);
         Task<JobDetailsResponse> AddCompletionMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> AddCancellationMarkAsync(JobMarkRequest request);
+        Task<JobDetailsResponse> RemoveCompletionMarkAsync(JobMarkRequest request);
+        Task<JobDetailsResponse> RemoveCancellationMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> InstantAcceptDirectProposalAsync(InstantAcceptDirectProposalRequest request);
         Task<JobDetailsResponse> InstantDeclineDirectProposalAsync(InstantDeclineDirectProposalRequest request);
         Task<JobProposalResponse> SuggestChangesAsync(int jobId, JobProposalInsertRequest request);
         Task<JobDetailsResponse> AcceptSuggestedChangesAsync(JobProposalDecisionRequest request);
         Task<JobDetailsResponse> DeclineSuggestedChangesAsync(JobProposalDecisionRequest request);
         Task<JobDetailsResponse> AddAddressAsync(int jobId, JobAddressUpdateRequest request);
-
 
 
     }

@@ -49,17 +49,7 @@ namespace HandyLink.WebApi.Controllers
             return await _service.SuggestChangesAsync(jobId, request);
         }
 
-        [HttpPost("completion-mark")]
-        public async Task<JobDetailsResponse> MarkAsCompleted([FromBody] JobMarkRequest request)
-        {
-            return await _service.AddCompletionMarkAsync(request);
-        }
 
-        [HttpPost("cancellation-mark")]
-        public async Task<JobDetailsResponse> MarkAsCancelled([FromBody] JobMarkRequest request)
-        {
-            return await _service.AddCancellationMarkAsync(request);
-        }
 
 
         [HttpPost("accept-suggested-changes")]
@@ -82,6 +72,30 @@ namespace HandyLink.WebApi.Controllers
             return await _service.AddAddressAsync(jobId, request);
         }
 
+
+        [HttpPost("add-completion-mark")]
+        public async Task<JobDetailsResponse> AddCompletionMark([FromBody] JobMarkRequest request)
+        {
+            return await _service.AddCompletionMarkAsync(request);
+        }
+
+        [HttpPost("add-cancellation-mark")]
+        public async Task<JobDetailsResponse> AddCancellationMark([FromBody] JobMarkRequest request)
+        {
+            return await _service.AddCancellationMarkAsync(request);
+        }
+
+        [HttpPost("remove-completion-mark")]
+        public async Task<JobDetailsResponse> RemoveCompletionMark([FromBody] JobMarkRequest request)
+        {
+            return await _service.RemoveCompletionMarkAsync(request);
+        }
+
+        [HttpPost("remove-cancellation-mark")]
+        public async Task<JobDetailsResponse> RemoveCancellationMark([FromBody] JobMarkRequest request)
+        {
+            return await _service.RemoveCancellationMarkAsync(request);
+        }
 
 
     }

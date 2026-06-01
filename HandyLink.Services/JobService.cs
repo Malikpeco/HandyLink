@@ -271,6 +271,97 @@ namespace HandyLink.Services
 
 
 
+        public async Task<JobDetailsResponse> RemoveCompletionMarkAsync(JobMarkRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (job.JobStatus.Code != "CONFIRMED")
+                throw new HandyLinkBusinessRuleException($"JobStatus must be CONFIRMED for a completed-mark to be removed.");
+
+            if (job.HandymanProfileId == null || job.HandymanProfile == null)
+                throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.MarkedByUserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.MarkedByUserId} not found.");
+
+            var clientUserId = job.ClientProfile.UserId;
+            var handymanUserId = job.HandymanProfile.UserId;
+
+            if (request.MarkedByUserId != clientUserId && request.MarkedByUserId != handymanUserId)
+                throw new HandyLinkForbiddenException("Only the client or the assigned handyman can remove a completed-mark from this job.");
+
+
+            var existingCompletionMark = job.JobCompletionMarks.FirstOrDefault(x => x.MarkedByUserId == request.MarkedByUserId);
+            if (existingCompletionMark == null)
+                throw new HandyLinkBusinessRuleException("User has not marked this job as completed.");
+
+            _dbContext.JobCompletionMarks.Remove(existingCompletionMark);
+
+            await _dbContext.SaveChangesAsync();
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            return _mapper.Map<JobDetailsResponse>(job);
+
+        }
+
+
+
+
+
+
+
+        public async Task<JobDetailsResponse> RemoveCancellationMarkAsync(JobMarkRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x => x.Id == request.JobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (job.JobStatus.Code != "CONFIRMED")
+                throw new HandyLinkBusinessRuleException($"JobStatus must be CONFIRMED for a cancelled-mark to be removed.");
+
+            if (job.HandymanProfileId == null || job.HandymanProfile == null)
+                throw new HandyLinkBusinessRuleException("Job must have a HandymanProfile.");
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == request.MarkedByUserId);
+            if (user == null)
+                throw new HandyLinkNotFoundException($"User with id {request.MarkedByUserId} not found.");
+
+            var clientUserId = job.ClientProfile.UserId;
+            var handymanUserId = job.HandymanProfile.UserId;
+
+            if (request.MarkedByUserId != clientUserId && request.MarkedByUserId != handymanUserId)
+                throw new HandyLinkForbiddenException("Only the client or the assigned handyman can remove a cancelled-mark from this job.");
+
+
+            var existingCancellationMark = job.JobCancellationMarks.FirstOrDefault(x => x.MarkedByUserId == request.MarkedByUserId);
+            if (existingCancellationMark == null)
+                throw new HandyLinkBusinessRuleException("User has not marked this job as cancelled.");
+
+            _dbContext.JobCancellationMarks.Remove(existingCancellationMark);
+
+            await _dbContext.SaveChangesAsync();
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            return _mapper.Map<JobDetailsResponse>(job);
+
+        }
+
+
+
+
+
+
+
+
 
         public async Task<JobDetailsResponse> InstantAcceptDirectProposalAsync(InstantAcceptDirectProposalRequest request)
         {
