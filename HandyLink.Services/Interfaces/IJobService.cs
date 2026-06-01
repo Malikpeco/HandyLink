@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace HandyLink.Services.Interfaces
     {
         Task<JobDetailsResponse> CreateJobAsync(JobInsertRequest request);
         Task<JobDetailsResponse> GetByIdAsync(int id);
+        Task<PageResult<JobListResponse>> GetAdminJobsAsync(AdminJobSearchObject? search = null);
         Task<JobDetailsResponse> AddCompletionMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> AddCancellationMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> RemoveCompletionMarkAsync(JobMarkRequest request);

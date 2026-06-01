@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using HandyLink.Services;
 using HandyLink.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,12 @@ namespace HandyLink.WebApi.Controllers
         public async Task<JobDetailsResponse> GetById(int id)
         {
             return await _service.GetByIdAsync(id);
+        }
+
+        [HttpGet("admin")]
+        public async Task<PageResult<JobListResponse>> GetAdminJobs([FromQuery] AdminJobSearchObject? search = null)
+        {
+            return await _service.GetAdminJobsAsync(search);
         }
 
         [HttpPost("instant-accept-direct-proposal")]

@@ -9,14 +9,8 @@ using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.Json;
-using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Dynamic.Core;
+
 
 namespace HandyLink.Services
 {
@@ -110,6 +104,50 @@ namespace HandyLink.Services
             var createdJob = await IncludeRelatedEntitiesAsync(entity);
             return _mapper.Map<JobDetailsResponse>(createdJob);
         }
+
+
+
+
+
+
+        public async Task<PageResult<JobListResponse>> GetAdminJobsAsync(AdminJobSearchObject? searchObject = null)
+        {
+            var query = _dbContext.Jobs.AsQueryable();
+
+            query = IncludeRelatedEntitiesList(query);
+
+            query = ApplyAdminFilters(query, searchObject);
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
+                }
+                query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                query = query.Take(searchObject.PageSize);
+
+            }
+
+            var list = query.Select(item => _mapper.Map<JobListResponse>(item)).ToList();
+
+            var pageResult = new PageResult<JobListResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+        }
+
+
+
 
 
 
@@ -827,6 +865,65 @@ namespace HandyLink.Services
 
 
 
+
+
+
+
+
+
+
+
+        private IQueryable<Job> ApplyAdminFilters(IQueryable<Job> query, AdminJobSearchObject? searchObject)
+        {
+            if (searchObject?.SearchTerm != null)
+            {
+                var normalized = searchObject.SearchTerm.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.Title.ToLower().Contains(normalized) ||
+                    x.Description.ToLower().Contains(normalized) ||
+                    x.Address != null && x.Address.ToLower().Contains(normalized) ||
+                    (x.ClientProfile.User.FirstName + " " + x.ClientProfile.User.LastName).ToLower().Contains(normalized) ||
+                    (x.HandymanProfile != null && ((x.HandymanProfile.User.FirstName + " " + x.HandymanProfile.User.LastName).ToLower().Contains(normalized))));
+            }
+            if (searchObject?.ServiceCategoryId != null)
+                query = query.Where(x => x.ServiceCategoryId == searchObject.ServiceCategoryId.Value);
+
+            if (searchObject?.CityId != null)
+                query = query.Where(x => x.CityId == searchObject.CityId.Value);
+
+            if (searchObject?.JobStatusId != null)
+                query = query.Where(x => x.JobStatusId == searchObject.JobStatusId.Value);
+
+            if (searchObject?.JobCreationType != null)
+                query = query.Where(x => x.JobCreationType == searchObject.JobCreationType.Value);
+
+            if (searchObject?.MinCurrentPrice != null)
+                query = query.Where(x => x.CurrentPrice >= searchObject.MinCurrentPrice.Value);
+
+            if (searchObject?.MaxCurrentPrice != null)
+                query = query.Where(x => x.CurrentPrice <= searchObject.MaxCurrentPrice.Value);
+
+            if (searchObject?.CreatedFromUtc != null)
+                query = query.Where(x => x.CreatedAtUtc >= searchObject.CreatedFromUtc.Value);
+
+            if (searchObject?.CreatedToUtc != null)
+                query = query.Where(x => x.CreatedAtUtc <= searchObject.CreatedToUtc.Value);
+
+            if (searchObject?.ScheduledFromUtc != null)
+                query = query.Where(x => x.CurrentScheduledAtUtc >= searchObject.ScheduledFromUtc.Value);
+
+            if (searchObject?.ScheduledToUtc != null)
+                query = query.Where(x => x.CurrentScheduledAtUtc <= searchObject.ScheduledToUtc.Value);
+
+            if (searchObject?.CurrentPriceOnArrangement != null)
+                query = query.Where(x => x.CurrentPriceOnArrangement == searchObject.CurrentPriceOnArrangement.Value);
+
+            if (searchObject?.CurrentTimeFlexible != null)
+                query = query.Where(x => x.CurrentTimeFlexible == searchObject.CurrentTimeFlexible.Value);
+
+            return query;
+        }
 
 
 
