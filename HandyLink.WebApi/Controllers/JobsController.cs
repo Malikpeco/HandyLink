@@ -63,18 +63,26 @@ namespace HandyLink.WebApi.Controllers
 
 
         [HttpPost("accept-suggested-changes")]
-        public async Task<JobDetailsResponse> AcceptSuggestedChanges(
-        [FromBody] JobProposalDecisionRequest request)
+        public async Task<JobDetailsResponse> AcceptSuggestedChanges([FromBody] JobProposalDecisionRequest request)
         {
             return await _service.AcceptSuggestedChangesAsync(request);
         }
 
 
         [HttpPost("decline-suggested-changes")]
-        public async Task<JobDetailsResponse> DeclineSuggestedChanges(
-        [FromBody] JobProposalDecisionRequest request)
+        public async Task<JobDetailsResponse> DeclineSuggestedChanges([FromBody] JobProposalDecisionRequest request)
         {
             return await _service.DeclineSuggestedChangesAsync(request);
         }
+
+
+        [HttpPut("{jobId}/address")]
+        public async Task<JobDetailsResponse> AddAddress(int jobId, [FromBody] JobAddressUpdateRequest request)
+        {
+            return await _service.AddAddressAsync(jobId, request);
+        }
+
+
+
     }
 }

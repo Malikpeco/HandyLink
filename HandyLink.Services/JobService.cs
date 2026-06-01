@@ -9,6 +9,7 @@ using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
@@ -694,6 +695,47 @@ namespace HandyLink.Services
 
 
         
+
+
+
+        public async Task<JobDetailsResponse> AddAddressAsync(int jobId, JobAddressUpdateRequest request)
+        {
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x=>x.Id==jobId);
+            if (job == null)
+                throw new HandyLinkNotFoundException($"Job with id {jobId} not found.");
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            if (string.IsNullOrWhiteSpace(request.Address))
+                throw new HandyLinkValidationException("Address is required.");
+
+            if (job.JobCreationType != JobCreationType.PublicRequest)
+                throw new HandyLinkBusinessRuleException("Job must be a PublicRequest for address to be added this way.");
+
+            if (job.Address != null)
+                throw new HandyLinkBusinessRuleException("Job already has an assigned address.");
+            
+            if (job.JobStatus.Code != "CONFIRMED")
+                throw new HandyLinkBusinessRuleException("Job status must be CONFIRMED for an address to be added.");
+
+            var clientProfile = await _dbContext.ClientProfiles.FirstOrDefaultAsync(x => x.Id == request.ClientProfileId);
+            if(clientProfile==null)
+                throw new HandyLinkNotFoundException($"ClientProfile with id {request.ClientProfileId} not found.");
+
+            if (job.ClientProfileId != clientProfile.Id)
+                throw new HandyLinkBusinessRuleException($"ClientProfile with id {clientProfile.Id} is not the ClientProfile assigned to this job.");
+
+            job.Address = request.Address;
+            await _dbContext.SaveChangesAsync();
+
+            job = await IncludeRelatedEntitiesAsync(job);
+
+            return _mapper.Map<JobDetailsResponse>(job);
+        }
+
+
+
+
 
 
 

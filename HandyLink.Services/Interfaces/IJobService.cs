@@ -19,7 +19,7 @@ namespace HandyLink.Services.Interfaces
         Task<JobProposalResponse> SuggestChangesAsync(int jobId, JobProposalInsertRequest request);
         Task<JobDetailsResponse> AcceptSuggestedChangesAsync(JobProposalDecisionRequest request);
         Task<JobDetailsResponse> DeclineSuggestedChangesAsync(JobProposalDecisionRequest request);
-        
+        Task<JobDetailsResponse> AddAddressAsync(int jobId, JobAddressUpdateRequest request);
 
 
 
