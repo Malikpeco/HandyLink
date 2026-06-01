@@ -42,11 +42,11 @@ namespace HandyLink.WebApi.Controllers
             return await _service.InstantDeclineDirectProposalAsync(request);
         }
 
-        [HttpPost("{id}/suggest-changes")]
-        public async Task<JobProposalResponse> SuggestChanges(int id, [FromBody] JobProposalInsertRequest request)
+        [HttpPost("{jobId}/suggest-changes")]
+        public async Task<JobProposalResponse> SuggestChanges(int jobId, [FromBody] JobProposalInsertRequest request)
         {
             
-            return await _service.SuggestChangesAsync(id, request);
+            return await _service.SuggestChangesAsync(jobId, request);
         }
 
         [HttpPost("completion-mark")]
@@ -67,6 +67,14 @@ namespace HandyLink.WebApi.Controllers
         [FromBody] JobProposalDecisionRequest request)
         {
             return await _service.AcceptSuggestedChangesAsync(request);
+        }
+
+
+        [HttpPost("decline-suggested-changes")]
+        public async Task<JobDetailsResponse> DeclineSuggestedChanges(
+        [FromBody] JobProposalDecisionRequest request)
+        {
+            return await _service.DeclineSuggestedChangesAsync(request);
         }
     }
 }
