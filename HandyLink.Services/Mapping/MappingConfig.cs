@@ -105,6 +105,15 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.CityName, src => src.City.Name)
                 .Map(dest => dest.JobCreationType, src => src.JobCreationType.ToString())
                 .Map(dest => dest.JobStatusName, src => src.JobStatus.Name);
+         
+            TypeAdapterConfig<Job, JobListResponse>
+                .NewConfig()
+                .Map(dest => dest.ClientFullName, src => src.ClientProfile.User.FirstName + " " + src.ClientProfile.User.LastName)
+                .Map(dest => dest.HandymanFullName, src => src.HandymanProfile != null ? src.HandymanProfile.User.FirstName + " " + src.HandymanProfile.User.LastName : null)
+                .Map(dest => dest.ServiceCategoryName, src => src.ServiceCategory.Name)
+                .Map(dest => dest.CityName, src => src.City.Name)
+                .Map(dest => dest.JobCreationType, src => src.JobCreationType.ToString())
+                .Map(dest => dest.JobStatusName, src => src.JobStatus.Name);
 
 
             TypeAdapterConfig<JobProposal, JobProposalResponse>

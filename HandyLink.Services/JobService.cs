@@ -150,12 +150,56 @@ namespace HandyLink.Services
 
 
 
-        public async Task<PageResult<JobListResponse>> GetClientJobsAsync(int clientProfileId, ClientJobSearchObject? searchObject = null)
+        public async Task<PageResult<JobListResponse>> GetClientJobsAsync(int clientProfileId, UserJobSearchObject? searchObject = null)
         {
             if (!await _dbContext.ClientProfiles.AnyAsync(x => x.Id == clientProfileId))
                 throw new HandyLinkNotFoundException($"ClientProfile with id {clientProfileId} not found.");
 
             var query = _dbContext.Jobs.Where(x=>x.ClientProfileId==clientProfileId).AsQueryable();
+
+            query = IncludeRelatedEntitiesList(query);
+
+            query = ApplyClientFilters(query, searchObject);
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
+                }
+                query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                query = query.Take(searchObject.PageSize);
+
+            }
+
+            var list = query.Select(item => _mapper.Map<JobListResponse>(item)).ToList();
+
+            var pageResult = new PageResult<JobListResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+        }
+
+
+
+
+
+
+        public async Task<PageResult<JobListResponse>> GetHandymanJobsAsync(int handymanProfileId, UserJobSearchObject? searchObject = null)
+        {
+            if (!await _dbContext.HandymanProfiles.AnyAsync(x => x.Id == handymanProfileId))
+                throw new HandyLinkNotFoundException($"HandymanProfile with id {handymanProfileId} not found.");
+
+            var query = _dbContext.Jobs.Where(x=>x.HandymanProfileId==handymanProfileId).AsQueryable();
 
             query = IncludeRelatedEntitiesList(query);
 
@@ -968,7 +1012,7 @@ namespace HandyLink.Services
 
 
 
-        private IQueryable<Job> ApplyClientFilters(IQueryable<Job> query, ClientJobSearchObject? searchObject)
+        private IQueryable<Job> ApplyClientFilters(IQueryable<Job> query, UserJobSearchObject? searchObject)
         {
             if (searchObject?.SearchTerm != null)
             {

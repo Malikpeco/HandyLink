@@ -15,7 +15,7 @@ namespace HandyLink.Model.Responses
         public string CityName { get; set; } = string.Empty;
         public string ClientFullName { get; set; } = string.Empty;
         public string? HandymanFullName { get; set; }
-        public JobCreationType JobCreationType { get; set; }
+        public string JobCreationType { get; set; } = string.Empty;
         public string JobStatusName { get; set; } = string.Empty;
         public string JobStatusCode { get; set; } = string.Empty;
         public decimal? CurrentPrice { get; set; }

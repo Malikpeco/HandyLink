@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HandyLink.Model.SearchObjects
 {
-    public class ClientJobSearchObject : BaseSearchObject
+    public class UserJobSearchObject : BaseSearchObject
     {
         public string? SearchTerm { get; set; }
         public int? JobStatusId { get; set; }
