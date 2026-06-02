@@ -4,6 +4,7 @@ using HandyLink.Model.SearchObjects;
 using HandyLink.Services;
 using HandyLink.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace HandyLink.WebApi.Controllers
 {
@@ -35,6 +36,12 @@ namespace HandyLink.WebApi.Controllers
         public async Task<PageResult<JobListResponse>> GetAdminJobs([FromQuery] AdminJobSearchObject? search = null)
         {
             return await _service.GetAdminJobsAsync(search);
+        }
+
+        [HttpGet("client/{clientProfileId}")]
+        public async Task<PageResult<JobListResponse>> GetClientJobs(int clientProfileId, [FromQuery] ClientJobSearchObject? search = null)
+        {
+            return await _service.GetClientJobsAsync(clientProfileId, search);
         }
 
         [HttpPost("instant-accept-direct-proposal")]
