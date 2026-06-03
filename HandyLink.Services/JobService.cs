@@ -238,6 +238,51 @@ namespace HandyLink.Services
 
 
 
+
+        public async Task<PageResult<JobListResponse>> GetPublicJobsAsync(PublicJobSearchObject? searchObject = null)
+        {
+            var query = _dbContext.Jobs.Where(x => x.JobStatus.Code=="PENDING" && x.JobCreationType==JobCreationType.PublicRequest).AsQueryable();
+
+            query = IncludeRelatedEntitiesList(query);
+
+            query = ApplyPublicJobFilters(query, searchObject);
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
+                }
+                query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                query = query.Take(searchObject.PageSize);
+
+            }
+
+            var list = query.Select(item => _mapper.Map<JobListResponse>(item)).ToList();
+
+            var pageResult = new PageResult<JobListResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+
+        }
+
+
+
+
+
+
+
+
         public async Task<JobDetailsResponse> GetByIdAsync(int id)
         {
             var query = _dbContext.Jobs.AsQueryable();
@@ -1029,6 +1074,34 @@ namespace HandyLink.Services
 
             return query;
         }
+
+
+        private IQueryable<Job> ApplyPublicJobFilters(IQueryable<Job> query, PublicJobSearchObject? searchObject)
+        {
+            if (searchObject?.SearchTerm != null)
+            {
+                var normalized = searchObject.SearchTerm.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.Title.ToLower().Contains(normalized) ||
+                    x.Description.ToLower().Contains(normalized) ||
+                    x.Address != null && x.Address.ToLower().Contains(normalized));
+            }
+            if (searchObject?.ServiceCategoryId != null)
+                query = query.Where(x => x.ServiceCategoryId == searchObject.ServiceCategoryId);
+
+            if (searchObject?.CityId != null)
+                query = query.Where(x => x.CityId == searchObject.CityId);
+
+            if (searchObject?.ScheduledFromUtc != null)
+                query = query.Where(x => x.CurrentScheduledAtUtc >= searchObject.ScheduledFromUtc);
+
+            if (searchObject?.ScheduledToUtc != null)
+                query = query.Where(x => x.CurrentScheduledAtUtc <= searchObject.ScheduledToUtc);
+
+            return query;
+        }
+
 
 
 

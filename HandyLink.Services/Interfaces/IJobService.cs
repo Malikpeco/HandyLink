@@ -16,6 +16,7 @@ namespace HandyLink.Services.Interfaces
         Task<PageResult<JobListResponse>> GetAdminJobsAsync(AdminJobSearchObject? search = null);
         Task<PageResult<JobListResponse>> GetClientJobsAsync(int clientProfileId, UserJobSearchObject? search = null);
         Task<PageResult<JobListResponse>> GetHandymanJobsAsync(int handymanProfileId, UserJobSearchObject? search = null);
+        Task<PageResult<JobListResponse>> GetPublicJobsAsync(PublicJobSearchObject? search = null);
         Task<JobDetailsResponse> AddCompletionMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> AddCancellationMarkAsync(JobMarkRequest request);
         Task<JobDetailsResponse> RemoveCompletionMarkAsync(JobMarkRequest request);

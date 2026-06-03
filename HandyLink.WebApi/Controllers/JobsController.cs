@@ -47,7 +47,13 @@ namespace HandyLink.WebApi.Controllers
         [HttpGet("handyman/{handymanProfileId}")]
         public async Task<PageResult<JobListResponse>> GetHandymanJobs(int handymanProfileId, [FromQuery] UserJobSearchObject? search = null)
         {
-            return await _service.GetClientJobsAsync(handymanProfileId, search);
+            return await _service.GetHandymanJobsAsync(handymanProfileId, search);
+        }
+
+        [HttpGet("public-jobs")]
+        public async Task<PageResult<JobListResponse>> GetPublicJobs([FromQuery] PublicJobSearchObject? search = null)
+        {
+            return await _service.GetPublicJobsAsync(search);
         }
 
         [HttpPost("instant-accept-direct-proposal")]
