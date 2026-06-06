@@ -19,11 +19,15 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.Property(x => x.FirstName).IsRequired().HasMaxLength(50);
             builder.Property(x => x.LastName).IsRequired().HasMaxLength(50);
             builder.Property(x => x.Email).IsRequired().HasMaxLength(200);
+            builder.HasIndex(x => x.Email).IsUnique().HasFilter("[IsDeleted] = 0");
             builder.Property(x => x.PasswordHash).IsRequired().HasMaxLength(200);
             builder.Property(x => x.PasswordSalt).IsRequired().HasMaxLength(200);
             builder.Property(x => x.PhoneNumber).IsRequired().HasMaxLength(20);
+            builder.HasIndex(x => x.PhoneNumber).IsUnique().HasFilter("[IsDeleted] = 0");
             builder.Property(x => x.UserType).IsRequired();
-            
+
+
+
             builder.HasOne(x => x.City)
                 .WithMany(x => x.Users)
                 .HasForeignKey(x => x.CityId)

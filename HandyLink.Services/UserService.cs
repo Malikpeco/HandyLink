@@ -37,6 +37,14 @@ namespace HandyLink.Services
                 throw new HandyLinkValidationException(validationResult.Errors);
             }
 
+            var emailExists = await _dbContext.Users.AnyAsync(x => x.Email == request.Email && x.UserStatus.Code == "ACTIVE");
+            var phoneNumberExists = await _dbContext.Users.AnyAsync(x => x.PhoneNumber==request.PhoneNumber && x.UserStatus.Code == "ACTIVE");
+            if (emailExists)
+                throw new HandyLinkValidationException("User with this email already exists.");
+            if (phoneNumberExists)
+                throw new HandyLinkValidationException("User with this phone number already exists.");
+
+
             var entity = MapInsertRequestToEntity(request);
             
             var pendingStatus = await _dbContext.UserStatuses.FirstOrDefaultAsync(x => x.Code == "PENDING");
