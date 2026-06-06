@@ -25,6 +25,8 @@ namespace HandyLink.Services.Database.Entities
         public ICollection<JobCancellationMark> JobCancellationMarks { get; set; } = new List<JobCancellationMark>();
         public ICollection<Message> Messages { get; set; } = new List<Message>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
         
 
 
