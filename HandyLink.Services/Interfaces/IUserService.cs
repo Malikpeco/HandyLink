@@ -1,4 +1,5 @@
-﻿using HandyLink.Model.Requests;
+﻿using eCommerce.Model.Responses;
+using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using System;
@@ -11,6 +12,8 @@ namespace HandyLink.Services.Interfaces
 {
     public interface IUserService : IBaseCRUDService<UserResponse, UserSearchObject, UserInsertRequest, UserUpdateRequest>
     {
+        Task<UserSensitiveResponse?> GetByEmailAsync(string email);
+        Task ChangePasswordAsync(UserPasswordChangeRequest request);
 
     }
 }

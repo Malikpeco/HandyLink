@@ -1,4 +1,5 @@
 ﻿using Azure;
+using eCommerce.Model.Responses;
 using FluentValidation;
 using HandyLink.Model.Database.Enums;
 using HandyLink.Model.Requests;
@@ -113,6 +114,48 @@ namespace HandyLink.Services
             _dbContext.Set<User>().Remove(entity);
             await _dbContext.SaveChangesAsync();
         }
+
+
+
+        public async Task<UserSensitiveResponse?> GetByEmailAsync(string email)
+        {
+            var user = await _dbContext.Users
+                .AsNoTracking()
+                .Include(x=>x.UserType)
+                .FirstOrDefaultAsync(x => x.Email == email);
+
+            UserSensitiveResponse? response = null;
+
+            if (user!=null)
+            {
+                response = _mapper.Map<UserSensitiveResponse>(user);
+            }
+            return response;
+        }
+
+
+
+        public async Task ChangePasswordAsync(UserPasswordChangeRequest request)
+        {
+            var user = _dbContext.Users.FirstOrDefault(u => u.Id == request.Id);
+
+            if (user == null)
+                throw new Exception("User not found");
+
+            if (!_hashingService.Verify(user.PasswordHash, user.PasswordSalt, request.Password))
+                throw new Exception("Wrong credential");
+
+            if (!request.NewPassword.Equals(request.ConfirmNewPassword))
+                throw new Exception("Password confimation doen't match new password");
+
+            user.PasswordSalt = _hashingService.GenerateSalt();
+            user.PasswordHash = _hashingService.HashText(request.NewPassword, user.PasswordSalt);
+
+
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
+        }
+
 
 
         protected override IEnumerable<User> ApplyFilters(IEnumerable<User> query, UserSearchObject? searchObject)

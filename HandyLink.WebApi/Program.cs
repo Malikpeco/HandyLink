@@ -9,6 +9,12 @@ using HandyLink.Services.Validators;
 using HandyLink.WebApi.Common;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+
 
 namespace HandyLink.WebApi
 {
@@ -43,6 +49,8 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IHandymanProfileService, HandymanProfileService>();
             builder.Services.AddScoped<IClientProfileService, ClientProfileService>();
             builder.Services.AddScoped<IJobService, JobService>();
+            builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             builder.Services.AddScoped<IHashingService, HashingService>();
 
@@ -66,8 +74,63 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<JobProposalInsertRequest>, JobProposalInsertValidator>();
 
 
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(o =>
+            {
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = builder.Configuration["JwtToken:Issuer"],
+                    ValidAudience = builder.Configuration["JwtToken:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["JwtToken:SecretKey"] ?? string.Empty)
+                    ),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
+            builder.Services.AddAuthorization();
+
+
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(
+                options =>
+                {
+                    options.SwaggerDoc("v1", new OpenApiInfo
+                    {
+                        Version = "v1",
+                        Title = "HandyLink API",
+                        Description = "API for HandyLink application"
+                    });
+                    var jwtSecurityScheme = new OpenApiSecurityScheme
+                    {
+                        BearerFormat = "JWT",
+                        Name = "JWT Authentication",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.Http,
+                        Scheme = JwtBearerDefaults.AuthenticationScheme,
+                        Reference = new OpenApiReference
+                        {
+                            Id = JwtBearerDefaults.AuthenticationScheme,
+                            Type = ReferenceType.SecurityScheme
+                        }
+                    };
+
+                    options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+                    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                            {
+                    { jwtSecurityScheme, Array.Empty<string>() }
+                            });
+                });
 
             var app = builder.Build();
 
@@ -82,6 +145,7 @@ namespace HandyLink.WebApi
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
