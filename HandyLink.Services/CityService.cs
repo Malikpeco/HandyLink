@@ -59,6 +59,10 @@ namespace HandyLink.Services
                 var normalized = searchObject.Name.Trim().ToLower();
                 query = query.Where(c => c.Name.ToLower().Contains(normalized));
             }
+            if (searchObject?.CountryId != null)
+            {
+                query=query.Where(c=>c.CountryId==searchObject.CountryId);
+            }
 
             return query;
         }
