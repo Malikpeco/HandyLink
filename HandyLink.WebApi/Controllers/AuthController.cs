@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HandyLink.WebApi.Controllers
@@ -17,6 +18,7 @@ namespace HandyLink.WebApi.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost("Login")]
         public async Task<ActionResult> Login([FromBody] UserLoginRequest request)
         {
@@ -24,7 +26,7 @@ namespace HandyLink.WebApi.Controllers
             return Ok(result);
         }
 
-
+        [AllowAnonymous]
         [HttpPost("RefreshAccessToken")]
         public async Task<ActionResult> RefreshAccessToken([FromBody] RefreshAccessTokenRequest request)
         {
@@ -32,6 +34,7 @@ namespace HandyLink.WebApi.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserInsertRequest request)
         {
