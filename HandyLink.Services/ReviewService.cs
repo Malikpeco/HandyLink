@@ -73,6 +73,36 @@ namespace HandyLink.Services
         }
 
 
+        public async Task<PageResult<ReviewResponse>> GetHandymanReviewsAsync(int handymanProfileId)
+        {
+            var handymanProfile = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x => x.Id == handymanProfileId);
+            if (handymanProfile == null)
+                throw new HandyLinkNotFoundException($"HandymanProfile with id {handymanProfileId} not found.");
+
+            var query = _dbContext.Reviews.Where(x => x.HandymanProfileId == handymanProfileId).AsQueryable();
+
+            query = IncludeRelatedEntitiesQuery(query);
+
+
+            int? totalCount = null;
+
+            var list = query.Select(item => _mapper.Map<ReviewResponse>(item)).ToList();
+
+            var pageResult = new PageResult<ReviewResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+        }
+
+
+
+
+
+
+
 
 
         private async Task<Review> IncludeRelatedEntitiesAsync(Review entity)
@@ -86,6 +116,16 @@ namespace HandyLink.Services
                     .ThenInclude(x=>x.JobStatus)
                 .FirstOrDefaultAsync(x => x.Id == entity.Id)
                 ?? throw new HandyLinkNotFoundException($"Review with id {entity.Id} not found.");
+        }
+        private IQueryable<Review> IncludeRelatedEntitiesQuery(IQueryable<Review> query)
+        {
+            return query
+                .Include(x => x.ClientProfile)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.HandymanProfile!)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.Job)
+                    .ThenInclude(x => x.JobStatus);
         }
     }
 }

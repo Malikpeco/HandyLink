@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace HandyLink.Services.Interfaces
     public interface IReviewService
     {
         Task<ReviewResponse> CreateReviewAsync(int jobId, ReviewInsertRequest request);
+        Task<PageResult<ReviewResponse>> GetHandymanReviewsAsync(int handymanProfileId);
 
     }
 }
