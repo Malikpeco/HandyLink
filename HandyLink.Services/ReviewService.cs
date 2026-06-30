@@ -1,12 +1,15 @@
 ﻿using FluentValidation;
 using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Database.Entities;
 using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,6 +99,89 @@ namespace HandyLink.Services
 
             return await Task.FromResult(pageResult);
         }
+
+
+
+
+
+
+        public async Task<PageResult<ReviewResponse>> GetAdminReviewsAsync(ReviewSearchObject? searchObject = null)
+        {
+            var query = _dbContext.Reviews.AsQueryable();
+
+            query = IncludeRelatedEntitiesQuery(query);
+
+            query = ApplyFilters(query, searchObject);
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = query.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    query = query.AsQueryable().OrderBy(searchObject.SortBy);
+                }
+                query = query.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                query = query.Take(searchObject.PageSize);
+
+            }
+
+            var list = query.Select(item => _mapper.Map<ReviewResponse>(item)).ToList();
+
+            var pageResult = new PageResult<ReviewResponse>
+            {
+                Items = list,
+                TotalCount = totalCount,
+            };
+
+            return await Task.FromResult(pageResult);
+        }
+
+
+
+
+
+
+
+
+
+
+
+        private IQueryable<Review> ApplyFilters(IQueryable<Review> query, ReviewSearchObject? searchObject)
+        {
+            if (searchObject?.SearchTerm != null)
+            {
+                var normalized = searchObject.SearchTerm.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.Job.Title.ToLower().Contains(normalized) ||
+                    (x.ClientProfile.User.FirstName + " " + x.ClientProfile.User.LastName).ToLower().Contains(normalized) ||
+                    (x.HandymanProfile.User.FirstName + " " + x.HandymanProfile.User.LastName).ToLower().Contains(normalized) ||
+                    x.Comment!=null && x.Comment.ToLower().Contains(normalized));
+            }
+
+            if (searchObject?.MinRating != null)
+                query = query.Where(x => x.Rating >= searchObject.MinRating);
+            
+            if (searchObject?.MaxRating != null)
+                query = query.Where(x => x.Rating <= searchObject.MaxRating);
+
+            if (searchObject?.CreatedFromUtc != null)
+                query = query.Where(x => x.CreatedAtUtc >= searchObject.CreatedFromUtc);
+
+            if (searchObject?.CreatedToUtc != null)
+                query = query.Where(x => x.CreatedAtUtc <= searchObject.CreatedToUtc);
+
+            return query;
+        }
+
+
+
+
 
 
 

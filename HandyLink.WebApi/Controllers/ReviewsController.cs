@@ -31,5 +31,11 @@ namespace HandyLink.WebApi.Controllers
         }
 
 
+        [HttpGet("admin")]
+        public async Task<PageResult<ReviewResponse>> GetAdminReviews([FromQuery] ReviewSearchObject? search = null)
+        {
+            return await _service.GetAdminReviewsAsync(search);
+        }
+
     }
 }
