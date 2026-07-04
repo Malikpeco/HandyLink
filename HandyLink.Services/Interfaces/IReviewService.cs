@@ -14,6 +14,9 @@ namespace HandyLink.Services.Interfaces
         Task<ReviewResponse> CreateReviewAsync(int jobId, ReviewInsertRequest request);
         Task<PageResult<ReviewResponse>> GetHandymanReviewsAsync(int handymanProfileId);
         Task<PageResult<ReviewResponse>> GetAdminReviewsAsync(ReviewSearchObject? search = null);
+        Task DeleteReviewAsync(int id);
+
+
 
     }
 }

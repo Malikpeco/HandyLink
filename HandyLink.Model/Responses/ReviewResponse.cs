@@ -8,6 +8,7 @@ namespace HandyLink.Model.Responses
 {
     public class ReviewResponse
     {
+        public int Id {  get; set; }
         public int JobId { get; set; }
         public string JobTitle { get; set; } = string.Empty;
         public int ClientProfileId { get; set; }

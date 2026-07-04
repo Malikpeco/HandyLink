@@ -146,7 +146,16 @@ namespace HandyLink.Services
 
 
 
+        public async Task DeleteReviewAsync(int id)
+        {
+            var review = _dbContext.Set<Review>().Find(id);
 
+            if (review == null)
+                throw new HandyLinkNotFoundException($"Review with id {id} not found.");
+
+            _dbContext.Set<Review>().Remove(review);
+            await _dbContext.SaveChangesAsync();
+        }
 
 
 

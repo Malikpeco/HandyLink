@@ -14,7 +14,7 @@ namespace HandyLink.WebApi.Controllers
 
         public ReviewsController(IReviewService service)
         {
-            _service = service;
+            _service = service; 
         }
 
         [HttpPost("job/{jobId}")]
@@ -35,6 +35,14 @@ namespace HandyLink.WebApi.Controllers
         public async Task<PageResult<ReviewResponse>> GetAdminReviews([FromQuery] ReviewSearchObject? search = null)
         {
             return await _service.GetAdminReviewsAsync(search);
+        }
+
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            await _service.DeleteReviewAsync(id);
+            return NoContent();
         }
 
     }
