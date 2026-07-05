@@ -21,6 +21,9 @@ namespace HandyLink.Services.Database.EntityConfigurations
                 .WithOne(x => x.Chat)
                 .HasForeignKey<Chat>(x => x.JobId);
 
+            builder.HasIndex(x => x.JobId).IsUnique().HasFilter("[IsDeleted] = 0");
+
+
         }
     }
 }
