@@ -53,6 +53,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IHandymanRecommendationService, HandymanRecommendationService>();
 
             builder.Services.AddScoped<IHashingService, HashingService>();
 
