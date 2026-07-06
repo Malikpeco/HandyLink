@@ -13,6 +13,6 @@ namespace HandyLink.Services.Interfaces
     {
         Task<ChatResponse> CreateChatAsync(int jobId, int userId);
         Task<ChatResponse> GetChatAsync(int jobId, int userId, MessageSearchObject? search = null);
-        //Task<MessageResponse> SendMessageAsync(int jobId, MessageInsertRequest request);
+        Task<MessageResponse> SendMessageAsync(int jobId, MessageInsertRequest request);
     }
 }

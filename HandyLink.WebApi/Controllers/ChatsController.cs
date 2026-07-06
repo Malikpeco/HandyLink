@@ -1,4 +1,5 @@
-﻿using HandyLink.Model.Responses;
+﻿using HandyLink.Model.Requests;
+using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,14 @@ namespace HandyLink.WebApi.Controllers
         public async Task<ActionResult<ChatResponse>> GetChat(int jobId, [FromQuery] int userId, [FromQuery] MessageSearchObject? searchObject = null)
         {
             var result = await _chatService.GetChatAsync(jobId, userId, searchObject);
+            return Ok(result);
+        }
+
+        
+        [HttpPost("messages")]
+        public async Task<ActionResult<MessageResponse>> SendMessage(int jobId, [FromBody] MessageInsertRequest request)
+        {
+            var result = await _chatService.SendMessageAsync(jobId, request);
             return Ok(result);
         }
 

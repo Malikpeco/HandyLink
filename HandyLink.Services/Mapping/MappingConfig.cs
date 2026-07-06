@@ -133,6 +133,9 @@ namespace HandyLink.Services.Mapping
                 .Map(dest => dest.JobTitle, src => src.Job.Title)
                 .Map(dest => dest.MarkedByUserFullName, src => src.MarkedByUser.FirstName + " " + src.MarkedByUser.LastName);
 
+            TypeAdapterConfig<Message, MessageResponse>
+                .NewConfig()
+                .Map(dest => dest.SenderFullName, src => src.SenderUser.FirstName + " " + src.SenderUser.LastName);
 
 
         }

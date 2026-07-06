@@ -1,4 +1,5 @@
 ﻿using Azure;
+using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
@@ -7,11 +8,10 @@ using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -151,6 +151,73 @@ namespace HandyLink.Services
                 }
             };
 
+        }
+
+
+
+
+
+        public async Task<MessageResponse> SendMessageAsync(int jobId, MessageInsertRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Content))
+            {
+                throw new HandyLinkBusinessRuleException("Message content is required.");
+            }
+
+            var chat = await _dbContext.Chats
+                .Include(x => x.Job)
+                    .ThenInclude(x => x.ClientProfile)
+                .Include(x => x.Job)
+                    .ThenInclude(x => x.HandymanProfile)
+                .FirstOrDefaultAsync(x => x.JobId == jobId);
+
+            if (chat == null)
+            {
+                throw new HandyLinkNotFoundException($"Chat for job with id {jobId} not found.");
+            }
+
+            var job = chat.Job;
+
+            if (job.HandymanProfileId == null)
+            {
+                throw new HandyLinkBusinessRuleException("Cannot send messages before a handyman is assigned.");
+            }
+
+            var isClient = job.ClientProfile.UserId == request.SenderUserId;
+            var isHandyman = job.HandymanProfile!.UserId == request.SenderUserId;
+
+            if (!isClient && !isHandyman)
+            {
+                throw new HandyLinkForbiddenException("Only the assigned handyman or client may send messages in this chat.");
+            }
+
+
+            var message = _mapper.Map<Message>(request);
+
+            message.ChatId = chat.Id;
+            message.Content = request.Content.Trim();
+            message.CreatedAtUtc = DateTime.UtcNow;
+
+            _dbContext.Messages.Add(message);
+            await _dbContext.SaveChangesAsync();
+
+            var sender = await _dbContext.Users
+                .FirstOrDefaultAsync(x => x.Id == request.SenderUserId);
+
+            if (sender == null)
+            {
+                throw new HandyLinkNotFoundException($"User with id {request.SenderUserId} not found.");
+            }
+
+            var messageWithSender = await _dbContext.Messages
+                .Include(x => x.SenderUser)
+                .Include(x => x.Notification)
+                .FirstOrDefaultAsync(x => x.Id == message.Id);
+
+            if (messageWithSender == null)
+                throw new HandyLinkNotFoundException($"Message not found.");//will never happen, here just for the null reference error.
+
+            return _mapper.Map<MessageResponse>(messageWithSender);
         }
 
 
