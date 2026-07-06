@@ -55,6 +55,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IReviewService, ReviewService>();
             builder.Services.AddScoped<IHandymanRecommendationService, HandymanRecommendationService>();
             builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
             builder.Services.AddScoped<IHashingService, HashingService>();
 
