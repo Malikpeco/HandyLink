@@ -1,5 +1,6 @@
 ﻿using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +11,8 @@ namespace HandyLink.Services.Interfaces
 {
     public interface IChatService
     {
-        Task<ChatResponse> GetOrCreateConversationAsync(int jobId, int userId);
-        //Task<List<MessageResponse>> GetMessagesAsync(int jobId, int userId);
+        Task<ChatResponse> CreateChatAsync(int jobId, int userId);
+        Task<ChatResponse> GetChatAsync(int jobId, int userId, MessageSearchObject? search = null);
         //Task<MessageResponse> SendMessageAsync(int jobId, MessageInsertRequest request);
     }
 }

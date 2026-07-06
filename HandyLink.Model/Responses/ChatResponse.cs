@@ -11,6 +11,6 @@ namespace HandyLink.Model.Responses
         public int Id { get; set; }
         public int JobId { get; set; }
         public DateTime CreatedAtUtc { get; set; }
-        public List<MessageResponse> Messages { get; set; } = new();
+        public PageResult<MessageResponse> Messages { get; set; } = new();
     }
 }

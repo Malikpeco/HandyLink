@@ -1,10 +1,14 @@
-﻿using HandyLink.Model.Responses;
+﻿using Azure;
+using HandyLink.Model.Responses;
+using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Database;
 using HandyLink.Services.Database.Entities;
 using HandyLink.Services.Exceptions;
 using HandyLink.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +29,7 @@ namespace HandyLink.Services
             _dbContext = dbContext;
             _mapper = mapper;
         }
-        public async Task<ChatResponse> GetOrCreateConversationAsync(int jobId, int userId)
+        public async Task<ChatResponse> CreateChatAsync(int jobId, int userId)
         {
             var job = await _dbContext.Jobs
                 .Include(x => x.ClientProfile)
@@ -45,17 +49,14 @@ namespace HandyLink.Services
 
             if (!isClient && !isHandyman)
             {
-                throw new HandyLinkForbiddenException("Only the assigned handyman or client may access this chat.");
+                throw new HandyLinkForbiddenException("Only the assigned handyman or client may create this chat.");
             }
 
-            var chat = await _dbContext.Chats
-                .Include(x => x.Messages)
-                    .ThenInclude(x => x.SenderUser)
-                .FirstOrDefaultAsync(x => x.JobId == jobId);
+            var existingChat = await _dbContext.Chats.FirstOrDefaultAsync(x => x.JobId == jobId);
 
-            if (chat == null)
+            if (existingChat == null)
             {
-                chat = new Chat
+                var chat = new Chat
                 {
                     JobId = jobId,
                     CreatedAtUtc = DateTime.UtcNow
@@ -63,11 +64,95 @@ namespace HandyLink.Services
 
                 _dbContext.Chats.Add(chat);
                 await _dbContext.SaveChangesAsync();
+
+                return _mapper.Map<ChatResponse>(chat);
+            }
+            else
+            {
+                throw new HandyLinkBusinessRuleException($"Chat already exists for job with id {jobId}.");
             }
 
-            return _mapper.Map<ChatResponse>(chat);
+            
+        }
+
+
+
+
+
+        public virtual async Task<ChatResponse> GetChatAsync(int jobId, int userId, MessageSearchObject? searchObject = null)
+        {
+            var chat = await _dbContext.Chats
+                .Include(x => x.Job)
+                    .ThenInclude(x => x.ClientProfile)
+                .Include(x => x.Job)
+                    .ThenInclude(x => x.HandymanProfile)
+                .FirstOrDefaultAsync(x => x.JobId == jobId);
+
+            if (chat == null)
+            {
+                throw new HandyLinkNotFoundException($"Chat for job with id {jobId} not found.");
+            }
+
+            var job = chat.Job;
+
+            var isClient = job.ClientProfile.UserId == userId;
+            var isHandyman = job.HandymanProfile != null && job.HandymanProfile.UserId == userId;
+
+            if (!isClient && !isHandyman)
+            {
+                throw new HandyLinkForbiddenException("Only the assigned handyman or client may view this chat.");
+            }
+
+            var messagesQuery = _dbContext.Messages
+                .Include(x => x.SenderUser)
+                .Where(x => x.ChatId == chat.Id)
+                .AsQueryable();
+
+            int? totalCount = null;
+
+            if (searchObject != null)
+            {
+                if (searchObject.IncludeTotalCount)
+                {
+                    totalCount = messagesQuery.Count();
+                }
+                if (!string.IsNullOrWhiteSpace(searchObject.SortBy))
+                {
+                    messagesQuery = messagesQuery.OrderBy(searchObject.SortBy);
+                }
+                else
+                {
+                    messagesQuery = messagesQuery.OrderByDescending(x => x.CreatedAtUtc);
+                }
+
+                messagesQuery = messagesQuery.Skip((searchObject.Page - 1) * searchObject.PageSize);
+                messagesQuery = messagesQuery.Take(searchObject.PageSize);
+            }
+
+            else
+            {
+                messagesQuery = messagesQuery
+                    .OrderByDescending(x => x.CreatedAtUtc)
+                     .Take(10);
+            }
+
+
+            var messages = messagesQuery.Select(x => _mapper.Map<MessageResponse>(x)).ToList();
+
+            return new ChatResponse
+            {
+                Id = chat.Id,
+                JobId = chat.JobId,
+                CreatedAtUtc = chat.CreatedAtUtc,
+                Messages = new PageResult<MessageResponse>
+                {
+                    Items = messages,
+                    TotalCount = totalCount
+                }
+            };
 
         }
+
 
     }
 }
