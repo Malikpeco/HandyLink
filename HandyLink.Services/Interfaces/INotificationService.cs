@@ -13,7 +13,7 @@ namespace HandyLink.Services.Interfaces
     {
         Task<PageResult<NotificationResponse>> GetMyNotificationsAsync(int userId, NotificationSearchObject? searchObject = null);
 
-        //Task<NotificationResponse> CreateAsync(NotificationInsertRequest request);
+        Task<NotificationResponse> CreateAsync(NotificationInsertRequest request);
 
         //Task MarkAsReadAsync(int notificationId, int userId);
 
