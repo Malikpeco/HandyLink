@@ -78,6 +78,7 @@ namespace HandyLink.WebApi
             builder.Services.AddScoped<IValidator<JobInsertRequest>, JobInsertValidator>();
             builder.Services.AddScoped<IValidator<JobProposalInsertRequest>, JobProposalInsertValidator>();
             builder.Services.AddScoped<IValidator<ReviewInsertRequest>, ReviewInsertValidator>();
+            builder.Services.AddScoped<IValidator<NotificationInsertRequest>, NotificationInsertValidator>();
 
 
 

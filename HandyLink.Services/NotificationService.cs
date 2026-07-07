@@ -14,6 +14,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HandyLink.Services
@@ -138,16 +139,10 @@ namespace HandyLink.Services
                 }
             }
 
-            var notification = new Notification
-            {
-                UserId = request.UserId,
-                Title = request.Title,
-                Content = request.Content,
-                IsRead = false,
-                ReadAtUtc = null,
-                JobId = request.JobId,
-                MessageId = request.MessageId
-            };
+            var notification = _mapper.Map<Notification>(request);
+            notification.IsRead = false;
+            notification.ReadAtUtc = null;
+            
 
             _dbContext.Notifications.Add(notification);
             await _dbContext.SaveChangesAsync();

@@ -20,13 +20,15 @@ namespace HandyLink.Services
         private readonly IMapper _mapper;
         private readonly IValidator<JobInsertRequest> _insertValidator;
         private readonly IValidator<JobProposalInsertRequest> _proposalInsertValidator;
+        private readonly INotificationService _notificationService;
 
-        public JobService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<JobInsertRequest> insertValidator, IValidator<JobProposalInsertRequest> proposalInsertValidator)
+        public JobService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<JobInsertRequest> insertValidator, IValidator<JobProposalInsertRequest> proposalInsertValidator, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _insertValidator = insertValidator;
             _proposalInsertValidator = proposalInsertValidator;
+            _notificationService = notificationService;
         }
 
 
@@ -537,7 +539,7 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException($"Job with id {request.JobId} not found.");
             job = await IncludeRelatedEntitiesAsync(job);
 
-            var handyman = await _dbContext.HandymanProfiles.FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
+            var handyman = await _dbContext.HandymanProfiles.Include(x=>x.User).FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
             if (handyman == null)
                 throw new HandyLinkNotFoundException($"HandymanProfile with id {request.HandymanProfileId} not found.");
 
@@ -562,6 +564,19 @@ namespace HandyLink.Services
             job.ConfirmedAtUtc = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
+
+
+
+            var client = job.ClientProfile;
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = request.JobId,
+                Title = "Your direct proposal has been accepted!",
+                Content = $"Handyman '{handyman.User.FirstName} {handyman.User.LastName}' has accepted your job proposal.",
+                UserId = client.UserId
+            });
+
             return _mapper.Map<JobDetailsResponse>(job);
         }
 
@@ -604,6 +619,17 @@ namespace HandyLink.Services
             job.CancelledAtUtc = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
+
+            var client = job.ClientProfile;
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = request.JobId,
+                Title = "Your direct proposal has been declined!",
+                Content = $"Handyman '{handyman.User.FirstName} {handyman.User.LastName}' has declined your job proposal.",
+                UserId = client.UserId
+            });
+
             return _mapper.Map<JobDetailsResponse>(job);
         }
 
@@ -644,7 +670,6 @@ namespace HandyLink.Services
 
             if (request.ProposedScheduledAtUtc == default)
                 throw new HandyLinkBusinessRuleException("ProposedScheduledAt is required.");
-
 
 
 
@@ -736,7 +761,11 @@ namespace HandyLink.Services
                 throw new HandyLinkBusinessRuleException("Unsupported job creation type.");
             }
 
+            
+            var proposalHandyman = await _dbContext.HandymanProfiles.Include(x=>x.User).FirstOrDefaultAsync(x => x.Id == proposalHandymanProfileId);
 
+            if (proposalHandyman == null)
+                throw new HandyLinkNotFoundException($"HandymanProfile with id {proposalHandymanProfileId} not found.");
 
             var proposal = _mapper.Map<JobProposal>(request);
             proposal.JobId = job.Id;
@@ -755,6 +784,19 @@ namespace HandyLink.Services
 
             _dbContext.JobProposals.Add(proposal);
             await _dbContext.SaveChangesAsync();
+
+            var receivingUserId = 
+                request.ProposedByUserId == proposalHandyman.UserId? 
+                job.ClientProfile.UserId : 
+                proposal.HandymanProfile.UserId;
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = job.Id,
+                Title = "Suggested changes received!",
+                Content = $"You have received suggested changes for the job '{job.Title}'.",
+                UserId = receivingUserId
+            });
 
             return _mapper.Map<JobProposalResponse>(proposal);
         }
