@@ -103,6 +103,24 @@ namespace HandyLink.Services
             _dbContext.Jobs.Add(entity);
             await _dbContext.SaveChangesAsync();
 
+            if(request.JobCreationType == JobCreationType.DirectProposal)
+            {
+                var client = await _dbContext.ClientProfiles.Include(x => x.User).FirstOrDefaultAsync(x => x.Id == request.ClientProfileId);
+                var handyman = await _dbContext.HandymanProfiles.Include(x => x.User).FirstOrDefaultAsync(x => x.Id == request.HandymanProfileId);
+                if (handyman == null)
+                    throw new HandyLinkNotFoundException("Jobs with JobCreationType.DirectProposal must have a HandymanProfileId.");
+                if (client == null)
+                    throw new HandyLinkNotFoundException("ClientProfile with id { request.ClientProfileId } not found.");
+
+                await _notificationService.CreateAsync(new NotificationInsertRequest
+                {
+                    JobId = entity.Id,
+                    Title = "Job proposal received!",
+                    Content = $"Client '{client.User.FirstName} {client.User.LastName}' has sent you a job proposal.",
+                    UserId = handyman.UserId
+                });
+            }
+
             var createdJob = await IncludeRelatedEntitiesAsync(entity);
             return _mapper.Map<JobDetailsResponse>(createdJob);
         }
@@ -896,6 +914,21 @@ namespace HandyLink.Services
 
             await _dbContext.SaveChangesAsync();
 
+            if (job.HandymanProfile == null)
+                throw new HandyLinkNotFoundException("Job does not have an assigned handyman!");//will never happen here,just for null-ref. error
+
+            var receivingUserId =
+               request.UserId == job.ClientProfile.UserId ?
+               job.HandymanProfile.UserId :
+               job.ClientProfile.UserId;
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = job.Id,
+                Title = "Suggested changes accepted!",
+                Content = $"Your suggested changes to the job '{job.Title}' have been accepted, and the job is now confirmed.",
+                UserId = receivingUserId
+            });
             job = await IncludeRelatedEntitiesAsync(job);
 
             return _mapper.Map<JobDetailsResponse>(job);
@@ -985,6 +1018,23 @@ namespace HandyLink.Services
 
 
             await _dbContext.SaveChangesAsync();
+
+
+            if (job.HandymanProfile == null)
+                throw new HandyLinkNotFoundException("Job does not have an assigned handyman!");//will never happen here,just for null-ref. error
+
+            var receivingUserId =
+               request.UserId == job.ClientProfile.UserId ?
+               job.HandymanProfile.UserId :
+               job.ClientProfile.UserId;
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = job.Id,
+                Title = "Suggested changes declined.",
+                Content = $"Your suggested changes to the job '{job.Title}' have been declined, and the job is now cancelled.",
+                UserId = receivingUserId
+            });
 
             job = await IncludeRelatedEntitiesAsync(job);
 
