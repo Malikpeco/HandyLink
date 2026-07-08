@@ -1050,7 +1050,7 @@ namespace HandyLink.Services
 
         public async Task<JobDetailsResponse> AddAddressAsync(int jobId, JobAddressUpdateRequest request)
         {
-            var job = await _dbContext.Jobs.FirstOrDefaultAsync(x=>x.Id==jobId);
+            var job = await _dbContext.Jobs.Include(x=>x.HandymanProfile).FirstOrDefaultAsync(x=>x.Id==jobId);
             if (job == null)
                 throw new HandyLinkNotFoundException($"Job with id {jobId} not found.");
 
@@ -1079,6 +1079,22 @@ namespace HandyLink.Services
             await _dbContext.SaveChangesAsync();
 
             job = await IncludeRelatedEntitiesAsync(job);
+
+            var receivingUserId = 0;
+            
+            if (job.HandymanProfile != null) //it'll never be null.
+            {
+                receivingUserId = job.HandymanProfile.UserId;
+            }
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = job.Id,
+                Title = "Client confirmed their address.",
+                Content = $"Client '{clientProfile.User.FirstName} {clientProfile.User.LastName}' has confirmed their address for the job '{job.Title}'.",
+                UserId = receivingUserId
+            });
+
 
             return _mapper.Map<JobDetailsResponse>(job);
         }
