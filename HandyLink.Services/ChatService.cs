@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Azure.Core;
 using HandyLink.Model.Requests;
 using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
@@ -12,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -23,11 +25,13 @@ namespace HandyLink.Services
     {
         private HandyLinkDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly INotificationService _notificationService;
 
-        public ChatService(HandyLinkDbContext dbContext, IMapper mapper) 
+        public ChatService(HandyLinkDbContext dbContext, IMapper mapper, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _mapper = mapper;
+            _notificationService = notificationService;
         }
         public async Task<ChatResponse> CreateChatAsync(int jobId, int userId)
         {
@@ -64,6 +68,24 @@ namespace HandyLink.Services
 
                 _dbContext.Chats.Add(chat);
                 await _dbContext.SaveChangesAsync();
+
+                var creatingUser = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+                if (creatingUser == null)
+                    throw new HandyLinkNotFoundException("User not found.");//will never happen
+
+                var receivingUserId =
+                job.HandymanProfile.UserId == userId ?
+                job.ClientProfile.UserId :
+                job.HandymanProfile.UserId;
+
+                await _notificationService.CreateAsync(new NotificationInsertRequest
+                {
+                    JobId = job.Id,
+                    Title = "Chat opened!",
+                    Content = $"{creatingUser.FirstName} {creatingUser.LastName} has started a chat with you.",
+                    UserId = receivingUserId
+                });
 
                 return _mapper.Map<ChatResponse>(chat);
             }
@@ -176,7 +198,10 @@ namespace HandyLink.Services
                 throw new HandyLinkNotFoundException($"Chat for job with id {jobId} not found.");
             }
 
-            var job = chat.Job;
+            var job = await _dbContext.Jobs.Include(x => x.HandymanProfile).Include(x => x.ClientProfile).FirstOrDefaultAsync(x => x.Id == chat.JobId);
+
+            if (job == null)
+                throw new HandyLinkNotFoundException("Job does not exist.");//will never happen.
 
             if (job.HandymanProfileId == null)
             {
@@ -216,6 +241,21 @@ namespace HandyLink.Services
 
             if (messageWithSender == null)
                 throw new HandyLinkNotFoundException($"Message not found.");//will never happen, here just for the null reference error.
+
+
+            var receivingUserId =
+               request.SenderUserId == job.ClientProfile.UserId ?
+               job.HandymanProfile.UserId :
+               job.ClientProfile.UserId;
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = job.Id,
+                Title = "New message.",
+                Content = $"You have received a message from {sender.FirstName} {sender.LastName}.",
+                UserId = receivingUserId
+            });
+
 
             return _mapper.Map<MessageResponse>(messageWithSender);
         }
