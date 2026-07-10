@@ -21,6 +21,9 @@ namespace HandyLink.Services.Database.EntityConfigurations
             builder.Property(x => x.Rating).IsRequired();
             builder.ToTable(t => t.HasCheckConstraint("CK_Reviews_Rating", "[Rating] >=1 AND [Rating] <=5"));
 
+
+            builder.HasIndex(x => x.JobId).IsUnique().HasFilter("[IsDeleted] = 0");
+
             builder.HasOne(x => x.Job)
                 .WithOne(x => x.Review)
                 .HasForeignKey<Review>(x => x.JobId)

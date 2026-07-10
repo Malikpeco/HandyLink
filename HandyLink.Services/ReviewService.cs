@@ -24,12 +24,14 @@ namespace HandyLink.Services
         private readonly HandyLinkDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly IValidator<ReviewInsertRequest> _insertValidator;
+        private readonly INotificationService _notificationService;
 
-        public ReviewService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<ReviewInsertRequest> insertValidator)
+        public ReviewService(HandyLinkDbContext dbContext, IMapper mapper, IValidator<ReviewInsertRequest> insertValidator, INotificationService notificationService)
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _insertValidator = insertValidator;
+            _notificationService = notificationService;
         }
 
         public async Task<ReviewResponse> CreateReviewAsync(int jobId, ReviewInsertRequest request)
@@ -42,7 +44,7 @@ namespace HandyLink.Services
 
 
 
-            var job = await _dbContext.Jobs.Include(x=>x.JobStatus).FirstOrDefaultAsync(x => x.Id == jobId);
+            var job = await _dbContext.Jobs.Include(x=>x.JobStatus).Include(x=>x.HandymanProfile).ThenInclude(x => x.User).Include(x=>x.ClientProfile).ThenInclude(x=>x.User).FirstOrDefaultAsync(x => x.Id == jobId);
 
             if (job == null)
                 throw new HandyLinkNotFoundException($"Job with Id {jobId} not found.");
@@ -71,10 +73,27 @@ namespace HandyLink.Services
             _dbContext.Reviews.Add(entity);
             await _dbContext.SaveChangesAsync();
 
+
+            var receivingUserId = 0;
+
+            if (job.HandymanProfile != null) //it'll never be null.
+            {
+                receivingUserId = job.HandymanProfile.UserId;
+            }
+
+            await _notificationService.CreateAsync(new NotificationInsertRequest
+            {
+                JobId = job.Id,
+                Title = "New review!",
+                Content = $"Client '{job.ClientProfile.User.FirstName} {job.ClientProfile.User.LastName}' has left you a review for the job '{job.Title}'.",
+                UserId = receivingUserId
+            });
+
+
             var createdJob = await IncludeRelatedEntitiesAsync(entity);
             return _mapper.Map<ReviewResponse>(createdJob);
         }
-
+        
 
         public async Task<PageResult<ReviewResponse>> GetHandymanReviewsAsync(int handymanProfileId)
         {
