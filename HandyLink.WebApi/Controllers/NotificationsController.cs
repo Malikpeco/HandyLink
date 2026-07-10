@@ -1,13 +1,14 @@
 ﻿using HandyLink.Model.Responses;
 using HandyLink.Model.SearchObjects;
 using HandyLink.Services.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HandyLink.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class NotificationsController
+    public class NotificationsController : ControllerBase
     {
         private readonly INotificationService _service;
 
@@ -21,5 +22,14 @@ namespace HandyLink.WebApi.Controllers
         {
             return await _service.GetMyNotificationsAsync(userId, search);
         }
+
+
+        [HttpPut("{notificationId}/mark-as-read")]
+        public async Task<IActionResult> MarkAsRead(int notificationId, int userId)
+        {
+            await _service.MarkAsReadAsync(notificationId, userId);
+            return NoContent();
+        }
+
     }
 }

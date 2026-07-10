@@ -153,5 +153,33 @@ namespace HandyLink.Services
 
 
 
+
+
+
+
+        public async Task MarkAsReadAsync(int notificationId, int userId)
+        {
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(x => x.Id == notificationId);
+            if (notification==null)
+            {
+                throw new HandyLinkNotFoundException($"Notification with id {notificationId} not found.");
+            }
+
+            if (notification.IsRead == true)
+                throw new HandyLinkBusinessRuleException("Notification is already read.");
+
+            if (notification.UserId != userId)
+                throw new HandyLinkForbiddenException($"This notification does not belong to user with id {userId}.");
+
+            notification.IsRead = true;
+
+            notification.ReadAtUtc = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+
+
+
     }
 }

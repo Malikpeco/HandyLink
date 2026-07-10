@@ -15,7 +15,7 @@ namespace HandyLink.Services.Interfaces
 
         Task<NotificationResponse> CreateAsync(NotificationInsertRequest request);
 
-        //Task MarkAsReadAsync(int notificationId, int userId);
+        Task MarkAsReadAsync(int notificationId, int userId);
 
     }
 }
